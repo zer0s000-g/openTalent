@@ -1,8 +1,9 @@
+import type { ReactNode } from 'react'
+
 interface BadgeProps {
-  children: React.ReactNode
+  children: ReactNode
   color?: 'gray' | 'blue' | 'green' | 'yellow' | 'red'
 }
-
 const colorStyles = {
   gray: 'bg-gray-100 text-gray-700',
   blue: 'bg-primary-100 text-primary-700',

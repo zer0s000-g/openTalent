@@ -1,5 +1,6 @@
 import neo4j from 'neo4j-driver'
 import dotenv from 'dotenv'
+import { getRuntimeEnv } from '@/lib/env'
 
 dotenv.config({ path: '.env.local' })
 
@@ -160,13 +161,11 @@ function generateEmployees(count: number): EmployeeData[] {
 async function seed() {
   console.log('Starting seed process...')
 
-  const uri = process.env.NEO4J_URI ?? 'bolt://localhost:7687'
-  const username = process.env.NEO4J_USERNAME ?? 'neo4j'
-  const password = process.env.NEO4J_PASSWORD ?? 'password'
+  const env = getRuntimeEnv(process.env)
 
-  console.log(`Connecting to Neo4j at ${uri}...`)
+  console.log(`Connecting to Neo4j at ${env.NEO4J_URI}...`)
 
-  const driver = neo4j.driver(uri, neo4j.auth.basic(username, password))
+  const driver = neo4j.driver(env.NEO4J_URI, neo4j.auth.basic(env.NEO4J_USERNAME, env.NEO4J_PASSWORD))
 
   try {
     // Test connection

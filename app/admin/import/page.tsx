@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react'
+import { useState, useCallback, type ChangeEvent, type DragEvent } from 'react'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Card } from '@/components/shared/card'
 import { Button } from '@/components/shared/button'
@@ -20,7 +20,7 @@ export default function AdminImportPage() {
   const [result, setResult] = useState<ImportResult | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
+  const handleDrag = useCallback((e: DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     if (e.type === 'dragenter' || e.type === 'dragover') {
@@ -30,7 +30,7 @@ export default function AdminImportPage() {
     }
   }, [])
 
-  const handleDrop = useCallback((e: React.DragEvent) => {
+  const handleDrop = useCallback((e: DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
     setDragActive(false)
@@ -46,7 +46,7 @@ export default function AdminImportPage() {
     }
   }, [])
 
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileInput = (e: ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       setFile(e.target.files[0])
       setError(null)
@@ -61,9 +61,6 @@ export default function AdminImportPage() {
     setResult(null)
 
     try {
-      const formData = new FormData()
-      formData.append('file', file)
-
       // Read the file and send as text
       const text = await file.text()
 

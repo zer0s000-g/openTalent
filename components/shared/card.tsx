@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react'
+
 interface CardProps {
   title?: string
-  children: React.ReactNode
+  children: ReactNode
   className?: string
 }
-
 export function Card({ title, children, className = '' }: CardProps) {
   return (
     <div className={`rounded-lg border border-gray-200 bg-white p-6 ${className}`}>

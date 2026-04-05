@@ -28,10 +28,10 @@ npm install
 ### 3. Configure Environment
 
 ```bash
-cp .env.local.example .env.local
+cp .env.example .env.local
 ```
 
-The default values work with the Docker Compose setup.
+The default values work with the Docker Compose setup. `NEO4J_PASSWORD` must match your Neo4j instance.
 
 ### 4. Seed Sample Data
 
@@ -48,6 +48,16 @@ npm run dev
 ```
 
 Open http://localhost:3000
+
+
+## Environment Variables
+
+Create `.env.local` from `.env.example` and set:
+
+- `NEO4J_URI` - Bolt connection string (default `bolt://localhost:7687`)
+- `NEO4J_USERNAME` - Neo4j username
+- `NEO4J_PASSWORD` - Neo4j password
+- `NEO4J_DATABASE` - database name (`neo4j` by default)
 
 ## Available Scripts
 
