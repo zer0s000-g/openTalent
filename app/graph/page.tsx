@@ -299,79 +299,66 @@ export default function GraphExplorerPage() {
     .map(n => n.properties.name)
 
   useEffect(() => {
-    // Simple visualization using DOM elements (will be enhanced with Sigma.js)
     if (!network || !sigmaContainerRef.current) return
 
-    const container = sigmaContainerRef.current
-    container.innerHTML = ''
+    let renderer: any = null
+    let isMounted = true
 
-    // Create a simple force-directed layout visualization
-    const nodeElements: Record<string, HTMLDivElement> = {}
-    const positions: Record<string, { x: number; y: number }> = {}
+    Promise.all([
+      import('sigma'),
+      import('graphology'),
+      import('graphology-layout-forceatlas2')
+    ]).then(([{ default: Sigma }, { default: Graph }, { default: forceAtlas2 }]) => {
+      if (!isMounted) return
 
-    // Initialize positions randomly in a circle
-    const centerX = container.offsetWidth / 2
-    const centerY = container.offsetHeight / 2
-    const radius = Math.min(centerX, centerY) - 80
+      const container = sigmaContainerRef.current
+      if (!container) return
+      container.innerHTML = ''
 
-    network.nodes.forEach((node, idx) => {
-      const isCenter = node.id === network.center?.id
-      const angle = (idx / network.nodes.length) * Math.PI * 2
-      const nodeRadius = isCenter ? 0 : radius
+      const graph = new Graph()
 
-      positions[node.id] = {
-        x: centerX + Math.cos(angle) * nodeRadius,
-        y: centerY + Math.sin(angle) * nodeRadius,
-      }
+      network.nodes.forEach((node) => {
+        const isCenter = node.id === network.center?.id
+        const isEmployee = node.labels.includes('Employee')
+        const color = isCenter ? '#4f46e5' : isEmployee ? '#60a5fa' : '#34d399'
 
-      const el = document.createElement('div')
-      el.className = `absolute transform -translate-x-1/2 -translate-y-1/2 cursor-pointer transition-all duration-200 hover:scale-110`
-      el.style.left = `${positions[node.id].x}px`
-      el.style.top = `${positions[node.id].y}px`
+        graph.addNode(node.id, {
+          x: Math.random(),
+          y: Math.random(),
+          size: isCenter ? 15 : 10,
+          label: node.properties.name || node.properties.title || 'Unknown',
+          color,
+        })
+      })
 
-      const isEmployee = node.labels.includes('Employee')
+      network.relationships.forEach(rel => {
+        if (!graph.hasEdge(rel.start.id, rel.end.id) && !graph.hasEdge(rel.end.id, rel.start.id)) {
+          if (graph.hasNode(rel.start.id) && graph.hasNode(rel.end.id)) {
+            graph.addEdge(rel.start.id, rel.end.id, {
+              size: 2,
+              color: '#e2e8f0',
+            })
+          }
+        }
+      })
 
-      el.innerHTML = `
-        <div class="flex flex-col items-center">
-          <div class="w-${isCenter ? '16' : '10'} h-${isCenter ? '16' : '10'} rounded-full flex items-center justify-center text-white text-xs font-medium shadow-lg ${
-            isCenter ? 'bg-primary-600 ring-4 ring-primary-200' :
-            isEmployee ? 'bg-blue-500' :
-            'bg-green-500'
-          }">
-            ${node.properties.name?.charAt(0) || '?'}
-          </div>
-          <span class="mt-1 text-xs text-gray-700 max-w-[100px] truncate text-center">
-            ${node.properties.name || node.properties.title || 'Unknown'}
-          </span>
-        </div>
-      `
+      forceAtlas2.assign(graph, { iterations: 100, settings: { gravity: 1, scalingRatio: 5 } })
 
-      el.onclick = () => setSelectedNode(node)
-      container.appendChild(el)
-      nodeElements[node.id] = el
+      renderer = new Sigma(graph, container, {
+        renderEdgeLabels: true,
+        allowInvalidContainer: true,
+      })
+
+      renderer.on('clickNode', ({ node }: any) => {
+        const selected = network.nodes.find(n => n.id === node)
+        if (selected) setSelectedNode(selected)
+      })
     })
 
-    // Draw edges using SVG
-    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
-    svg.setAttribute('class', 'absolute inset-0 pointer-events-none')
-    svg.style.zIndex = '0'
-
-    network.relationships.forEach(rel => {
-      const start = positions[rel.start.id]
-      const end = positions[rel.end.id]
-      if (!start || !end) return
-
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line')
-      line.setAttribute('x1', String(start.x))
-      line.setAttribute('y1', String(start.y))
-      line.setAttribute('x2', String(end.x))
-      line.setAttribute('y2', String(end.y))
-      line.setAttribute('stroke', '#cbd5e1')
-      line.setAttribute('stroke-width', '2')
-      svg.appendChild(line)
-    })
-
-    container.insertBefore(svg, container.firstChild)
+    return () => {
+      isMounted = false
+      if (renderer) renderer.kill()
+    }
   }, [network])
 
   return (

@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getDriver, getSession } from '@/lib/neo4j'
-import neo4j from 'neo4j-driver'
+import { getSession } from '@/lib/neo4j'
 
 /**
  * GraphQL API Route with direct Cypher query execution
@@ -369,7 +368,8 @@ function formatNode(node: any): { id: string; labels: string[]; properties: Reco
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    let { query, variables = {}, operationName } = body
+    const { query, operationName } = body
+    const variables = body.variables || {}
 
     // Parse the query to find the operation name
     let opName = operationName
@@ -398,7 +398,7 @@ export async function POST(request: NextRequest) {
       for (const pair of argPairs) {
         const parts = pair.split(':').map((s: string) => s.trim())
         const key = parts[0]
-        let value = parts.slice(1).join(':') // Handle colons in values
+        const value = parts.slice(1).join(':') // Handle colons in values
         if (key && value !== undefined) {
           // Remove quotes from string values
           const cleanValue = value.replace(/^"|"$/g, '')

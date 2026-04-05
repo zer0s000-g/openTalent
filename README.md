@@ -19,6 +19,8 @@ Wait ~30 seconds for Neo4j to start. Verify at http://localhost:7474
 - Username: `neo4j`
 - Password: `opentalent123`
 
+*Note: Due to Docker Compose limitations in the local sandbox, you might need to install Neo4j locally using the community edition if Docker Compose is unavailable. In that case, make sure to reset your neo4j initial password to `opentalent123` via `cypher-shell` or `neo4j-admin`.*
+
 ### 2. Install Dependencies
 
 ```bash

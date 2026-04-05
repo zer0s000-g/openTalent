@@ -29,3 +29,6 @@ yarn-error.log*
 # Testing
 coverage
 .turbo
+
+neo4j/
+neo4j.tar.gz
