@@ -1,0 +1,8 @@
+{
+  "/skills/page": "app/skills/page.js",
+  "/employee/[id]/page": "app/employee/[id]/page.js",
+  "/api/graphql/route": "app/api/graphql/route.js",
+  "/admin/import/page": "app/admin/import/page.js",
+  "/locations/page": "app/locations/page.js",
+  "/dashboard/page": "app/dashboard/page.js"
+}

@@ -12,17 +12,21 @@ export function Button({
   className = '',
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-colors'
+  const baseStyles =
+    'inline-flex items-center justify-center gap-2 rounded-xl font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-4 disabled:cursor-not-allowed disabled:opacity-50'
 
   const variantStyles = {
-    primary: 'bg-primary-600 text-white hover:bg-primary-700',
-    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
-    ghost: 'text-gray-600 hover:bg-gray-100',
+    primary:
+      'bg-ink-900 text-white shadow-soft hover:-translate-y-0.5 hover:bg-ink-800 focus-visible:ring-[var(--ring)]',
+    secondary:
+      'border border-[color:var(--border-strong)] bg-white/85 text-ink-800 shadow-sm hover:border-primary-200 hover:bg-white focus-visible:ring-[var(--ring)]',
+    ghost:
+      'text-ink-600 hover:bg-white/70 hover:text-ink-900 focus-visible:ring-[var(--ring)]',
   }
 
   const sizeStyles = {
-    sm: 'px-3 py-1.5 text-sm',
-    md: 'px-4 py-2 text-sm',
+    sm: 'px-3.5 py-2 text-sm',
+    md: 'px-4.5 py-2.5 text-sm',
     lg: 'px-6 py-3 text-base',
   }
 

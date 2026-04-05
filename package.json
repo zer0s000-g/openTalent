@@ -6,11 +6,11 @@
     "graphql": "^16.8.1"
   },
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
-    "start": "next start",
+    "dev": "NEXT_DIST_DIR=.next-dev next dev",
+    "build": "NEXT_DIST_DIR=.next-build next build",
+    "start": "NEXT_DIST_DIR=.next-build next start",
     "lint": "next lint",
-    "typecheck": "tsc --noEmit",
+    "typecheck": "tsc --noEmit -p tsconfig.typecheck.json",
     "test": "vitest run",
     "test:watch": "vitest",
     "seed": "tsx scripts/seed.ts",
@@ -19,6 +19,7 @@
   "dependencies": {
     "@neo4j/graphql": "^5.5.0",
     "dotenv": "^17.4.0",
+    "graphology": "^0.26.0",
     "graphql": "^16.8.1",
     "neo4j-driver": "^5.17.0",
     "next": "14.1.0",
