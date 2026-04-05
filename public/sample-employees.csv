@@ -1,0 +1,121 @@
+employee_id,name,email,title,department,location,hired_date,manager_id,skills,certifications,education_institution,education_degree,education_field,aspiration_type,aspiration_timeline
+EMP0001,Susan Chen,susan.chen@company.com,VP Engineering,Engineering,San Francisco CA,2019-03-15,,Leadership;Communication;Python;AWS;System Design,,,Role Change,1 year
+EMP0002,Michael Rodriguez,michael.rodriguez@company.com,Engineering Manager,Engineering,San Francisco CA,2019-06-01,EMP0001,Leadership;Agile;JavaScript;React;Mentorship,CSM,Stanford University,BS,Computer Science,Leadership Track,6 months
+EMP0003,Jennifer Park,jennifer.park@company.com,Staff Engineer,Engineering,Seattle WA,2018-09-20,EMP0001,Python;Go;Kubernetes;AWS;System Design;Mentorship,AWS Certified Solutions Architect,MIT,MS,Computer Science,,
+EMP0004,David Thompson,david.thompson@company.com,Senior Engineer,Engineering,New York NY,2020-01-10,EMP0002,JavaScript;TypeScript;React;Node.js;GraphQL,,,Department Transfer,1 year
+EMP0005,Amanda Foster,amanda.foster@company.com,Software Engineer,Engineering,Austin TX,2021-07-22,EMP0002,Python;JavaScript;SQL;Git;Teamwork,,,Skill Development,6 months
+EMP0006,Robert Kim,robert.kim@company.com,Software Engineer,Engineering,Remote,2022-03-14,EMP0003,Java;Spring Boot;PostgreSQL;Docker;Problem Solving,,,Role Change,1-2 years
+EMP0007,Lisa Wong,lisa.wong@company.com,Senior Engineer,Engineering,San Francisco CA,2019-11-05,EMP0003,Rust;Go;Distributed Systems;Linux;Code Review,,,Leadership Track,2+ years
+EMP0008,James Miller,james.miller@company.com,Engineering Manager,Engineering,Boston MA,2020-05-18,EMP0001,Leadership;Python;AWS;Agile;Stakeholder Management,PMP,UC Berkeley,BS,Engineering,Role Change,1 year
+EMP0009,Emily Davis,emily.davis@company.com,Staff Engineer,Engineering,Denver CO,2018-02-28,EMP0008,Machine Learning;Python;TensorFlow;Data Analysis;Mentorship,Google Cloud Professional,Georgia Tech,MS,Data Science,,
+EMP0010,Christopher Lee,christopher.lee@company.com,Senior Engineer,Engineering,Seattle WA,2019-08-12,EMP0008,TypeScript;React;Node.js;GraphQL;AWS,,,Skill Development,6 months
+EMP0011,Sarah Johnson,sarah.johnson@company.com,VP Product,Product,San Francisco CA,2019-01-07,,Product Strategy;Leadership;Communication;Data Analysis;Stakeholder Management,,,Leadership Track,1 year
+EMP0012,Kevin Martinez,kevin.martinez@company.com,Group PM,Product,New York NY,2019-09-25,EMP0011,Product Strategy;Agile;SQL;User Research;Prioritization,CSM,Harvard University,MBA,Business,Role Change,6 months
+EMP0013,Rachel Green,rachel.green@company.com,Senior PM,Product,Remote,2020-06-30,EMP0012,Product Strategy;A/B Testing;Analytics;Communication;Roadmapping,,,Skill Development,1 year
+EMP0014,Daniel Brown,daniel.brown@company.com,PM,Product,Austin TX,2021-04-19,EMP0012,User Research;Agile;SQL;Presentation Skills;Writing,,,Role Change,1-2 years
+EMP0015,Michelle Taylor,michelle.taylor@company.com,PM,Product,San Francisco CA,2022-01-10,EMP0011,Product Strategy;Data Analysis;Wireframing;Communication,,,Department Transfer,2+ years
+EMP0016,Andrew Wilson,andrew.wilson@company.com,Head of Design,Design,San Francisco CA,2019-04-22,,Leadership;UX Research;Figma;Design Systems;Team Building,,,Leadership Track,1 year
+EMP0017,Jessica Anderson,jessica.anderson@company.com,Senior UX Designer,Design,Seattle WA,2020-02-14,EMP0016,UX Research;Figma;Prototyping;User Testing;Visual Design,,,Skill Development,6 months
+EMP0018,Matthew Harris,matthew.harris@company.com,Product Designer,Design,New York NY,2021-05-03,EMP0016,Figma;UI Design;Interaction Design;Animation;Communication,,,Role Change,1 year
+EMP0019,Ashley Clark,ashley.clark@company.com,UX Designer,Design,Remote,2022-08-21,EMP0017,UX Research;Wireframing;Figma;User Testing;Empathy,,,Skill Development,6 months
+EMP0020,Joshua Lewis,joshua.lewis@company.com,Head of Data,Data Science,San Francisco CA,2019-02-11,,Leadership;Python;Machine Learning;SQL;Strategy,,,Leadership Track,1 year
+EMP0021,Stephanie Walker,stephanie.walker@company.com,Senior Data Scientist,Data Science,Boston MA,2019-10-30,EMP0020,Python;Machine Learning;TensorFlow;SQL;Statistics;Communication,Google Cloud Professional,Stanford University,PhD,Statistics,,
+EMP0022,Brian Hall,brian.hall@company.com,Data Scientist,Data Science,Remote,2020-09-15,EMP0020,Python;R;Machine Learning;A/B Testing;Data Visualization,,,Skill Development,1 year
+EMP0023,Nicole Allen,nicole.allen@company.com,ML Engineer,Data Science,San Francisco CA,2020-03-28,EMP0020,Python;PyTorch;Kubernetes;MLOps;AWS;System Design,AWS Certified Developer,Carnegie Mellon University,MS,Computer Science,Role Change,6 months
+EMP0024,Ryan Young,ryan.young@company.com,Data Analyst,Data Science,New York NY,2021-11-08,EMP0021,SQL;Python;Tableau;Statistics;Presentation Skills,,,Department Transfer,1-2 years
+EMP0025,Laura King,laura.king@company.com,CMO,Marketing,San Francisco CA,2019-05-06,,Leadership;Strategy;Brand Management;Communication;Budget Management,,,Leadership Track,2+ years
+EMP0026,Brandon Wright,brandon.wright@company.com,Growth Manager,Marketing,Remote,2020-07-19,EMP0025,Digital Marketing;SEO;Google Analytics;A/B Testing;SQL,,,Skill Development,6 months
+EMP0027,Megan Scott,megan.scott@company.com,Marketing Manager,Marketing,Austin TX,2021-02-28,EMP0025,Content Marketing;Social Media;Campaign Management;Communication,,,Role Change,1 year
+EMP0028,Justin Torres,justin.torres@company.com,VP Sales,Sales,New York NY,2019-03-25,,Leadership;Sales Strategy;Negotiation;Communication;Pipeline Management,,,Leadership Track,1 year
+EMP0029,Samantha Rivera,samantha.rivera@company.com,Senior AE,Sales,San Francisco CA,2019-11-11,EMP0028,Sales Strategy;Negotiation;CRM;Presentation;Relationship Building,,,Role Change,6 months
+EMP0030,Eric Cooper,eric.cooper@company.com,AE,Sales,Boston MA,2020-08-05,EMP0028,Sales Strategy;Cold Calling;CRM;Communication;Time Management,,,Skill Development,1 year
+EMP0031,Amy Peterson,amy.peterson@company.com,SDR,Sales,Remote,2022-04-17,EMP0029,Prospecting;Cold Calling;CRM;Communication;Resilience,,,Role Change,6 months
+EMP0032,Katherine Gray,katherine.gray@company.com,SDR,Sales,Chicago IL,2022-09-30,EMP0029,Prospecting;Cold Calling;LinkedIn;Communication;Goal Oriented,,,Role Change,1 year
+EMP0033,Gregory Ramirez,gregory.ramirez@company.com,Head of People,HR,San Francisco CA,2019-06-17,,Leadership;Talent Acquisition;Employee Relations;Communication;Strategy,,,Leadership Track,1-2 years
+EMP0034,Christina James,christina.james@company.com,Talent Partner,HR,Remote,2020-04-22,EMP0033,Recruiting;Interviewing;Employer Branding;Communication;ATS,,,Skill Development,6 months
+EMP0035,Patrick Watson,patrick.watson@company.com,HR Manager,HR,New York NY,2020-11-30,EMP0033,Employee Relations;Performance Management;HRIS;Communication;Conflict Resolution,,,Role Change,1 year
+EMP0036,Rebecca Brooks,rebecca.brooks@company.com,CFO,Finance,San Francisco CA,2019-01-28,,Financial Strategy;Leadership;Financial Modeling;Communication;Risk Management,,,Leadership Track,2+ years
+EMP0037,Jeremy Price,jeremy.price@company.com,Finance Manager,Finance,Boston MA,2020-01-15,EMP0036,Financial Analysis;Excel;Forecasting;Reporting;Process Improvement,CPA,University of Texas,BBA,Finance,Role Change,1 year
+EMP0038,Victoria Bennett,victoria.bennett@company.com,Financial Analyst,Finance,San Francisco CA,2021-06-07,EMP0037,Financial Modeling;Excel;SQL;Data Analysis;Attention to Detail,,,Skill Development,6 months
+EMP0039,Nathan Wood,nathan.wood@company.com,General Counsel,Legal,San Francisco CA,2019-07-08,,Contract Negotiation;Compliance;Risk Management;Leadership;Strategy,,,Leadership Track,1-2 years
+EMP0040,Diana Barnes,diana.barnes@company.com,Legal Counsel,Legal,Remote,2020-10-19,EMP0039,Contract Law;Employment Law;Compliance;Research;Writing,,,Department Transfer,2+ years
+EMP0041,Henry Ross,henry.ross@company.com,COO,Operations,San Francisco CA,2019-02-04,,Operations Strategy;Leadership;Process Improvement;Communication;P&L Management,,,Leadership Track,1 year
+EMP0042,Olivia Henderson,olivia.henderson@company.com,Ops Manager,Operations,Austin TX,2020-05-25,EMP0041,Project Management;Process Improvement;Data Analysis;Communication;Vendor Management,,,Skill Development,6 months
+EMP0043,Tyler Coleman,tyler.coleman@company.com,Ops Coordinator,Operations,Denver CO,2021-09-12,EMP0042,Organization;Communication;Excel;Process Documentation;Multitasking,,,Role Change,1 year
+EMP0044,Madeline Jenkins,madeline.jenkins@company.com,VP Customer Success,Customer Success,San Francisco CA,2019-04-01,,Leadership;Customer Strategy;Communication;Data Analysis;Team Building,,,Leadership Track,1 year
+EMP0045,Sean Perry,sean.perry@company.com,CS Manager,Customer Success,Remote,2019-12-09,EMP0044,Team Management;Customer Relations;Escalation Management;Communication;Coaching,,,Role Change,6 months
+EMP0046,Hannah Powell,hannah.powell@company.com,Senior CSM,Customer Success,New York NY,2020-06-14,EMP0045,Account Management;Customer Success;Communication;Problem Solving;Empathy,,,Skill Development,1 year
+EMP0047,Ian Long,ian.long@company.com,CSM,Customer Success,Seattle WA,2021-03-28,EMP0045,Customer Onboarding;Relationship Management;Communication;Time Management,,,Role Change,1-2 years
+EMP0048,Gabrielle Hughes,gabrielle.hughes@company.com,CISO,Security,San Francisco CA,2019-08-19,,Security Strategy;Leadership;Risk Management;Compliance;Incident Response,CISSP,,MS,Cybersecurity,Leadership Track,1 year
+EMP0049,Marcus Flores,marcus.flores@company.com,Security Engineer,Security,Remote,2020-07-27,EMP0048,Penetration Testing;SIEM;Python;Network Security;Incident Response,CompTIA Security+,,BS,Information Technology,Skill Development,6 months
+EMP0050,Jenna Washington,jenna.washington@company.com,Security Analyst,Security,Boston MA,2021-10-05,EMP0048,Threat Analysis;SIEM;Documentation;Attention to Detail;Communication,,,Role Change,1 year
+EMP0051,Derek Butler,derek.butler@company.com,Director of IT,IT,San Francisco CA,2019-09-02,,IT Strategy;Leadership;Vendor Management;Budget Management;Communication,,,Leadership Track,1-2 years
+EMP0052,Tiffany Simmons,tiffany.simmons@company.com,IT Manager,IT,Austin TX,2020-03-16,EMP0051,IT Operations;Help Desk;Network Administration;Communication;Documentation,,,Skill Development,6 months
+EMP0053,Vincent Griffin,vincent.griffin@company.com,IT Support,IT,Denver CO,2021-08-23,EMP0052,Technical Support;Windows;Mac;Network Troubleshooting;Customer Service,,,Role Change,1 year
+EMP0054,Cassandra Hayes,castandra.hayes@company.com,Research Manager,Research,San Francisco CA,2019-10-14,,Research Strategy;Leadership;Scientific Writing;Grant Writing;Communication,PhD,Stanford University,PhD,Physics,Leadership Track,1 year
+EMP0055,Leo Russell,leo.russell@company.com,Senior Researcher,Research,Boston MA,2020-02-03,EMP0054,Research;Data Analysis;Scientific Writing;Python;Lab Management,PhD,MIT,PhD,Chemistry,,
+EMP0056,Priscilla Griffin,priscilla.griffin@company.com,Research Scientist,Research,Remote,2021-05-17,EMP0054,Research;Statistics;R;Scientific Writing;Peer Review,PhD,UC Berkeley,PhD,Biology,Skill Development,6 months
+EMP0057,Felix Porter,felix.porter@company.com,Principal Engineer,Engineering,San Francisco CA,2018-01-15,EMP0001,System Design;Architecture;Python;Go;Mentorship;Leadership,,,Role Change,2+ years
+EMP0058,Clara Murphy,clara.murphy@company.com,Senior Engineer,Engineering,Seattle WA,2019-05-20,EMP0057,JavaScript;TypeScript;React;Node.js;AWS;Mentorship,,,Leadership Track,1 year
+EMP0059,Wesley Bell,wesley.bell@company.com,Software Engineer,Engineering,Remote,2022-02-07,EMP0057,Python;FastAPI;PostgreSQL;Docker;Git,,,Skill Development,6 months
+EMP0060,Miriam Cox,miriam.cox@company.com,Engineering Manager,Engineering,New York NY,2019-07-29,EMP0001,Leadership;Agile;System Design;Stakeholder Management;Coaching,CSM,Georgia Tech,MS,Computer Science,Role Change,1 year
+EMP0061,Ira Howard,ira.howard@company.com,Senior Engineer,Engineering,Austin TX,2020-04-13,EMP0060,Java;Spring;Kubernetes;Microservices;Code Review,,,Skill Development,1 year
+EMP0062,Jonah Stevens,jonah.stevens@company.com,Software Engineer,Engineering,Chicago IL,2021-11-29,EMP0060,Python;Django;React;AWS;Teamwork,,,Role Change,6 months
+EMP0063,Edith Ward,edith.ward@company.com,PM,Product,San Francisco CA,2021-07-05,EMP0012,Product Strategy;User Research;Analytics;Communication;Roadmapping,,,Skill Development,1 year
+EMP0064,Rufus Reed,rufus.reed@company.com,Senior PM,Product,Remote,2020-01-20,EMP0011,Product Strategy;B2B;Enterprise;Communication;Negotiation,,,Role Change,6 months
+EMP0065,Cora Bailey,cora.bailey@company.com,PM,Product,Boston MA,2022-05-09,EMP0011,User Research;Agile;Data Analysis;Communication;Prioritization,,,Department Transfer,1-2 years
+EMP0066,Silas Rivera,silas.rivera@company.com,Product Designer,Design,San Francisco CA,2021-09-27,EMP0016,Figma;Visual Design;Prototyping;Animation;User Testing,,,Skill Development,6 months
+EMP0067,Iris Cooper,iris.cooper@company.com,Senior UX Designer,Design,Seattle WA,2020-06-08,EMP0016,UX Research;Service Design;Workshop Facilitation;Figma;Strategy,,,Leadership Track,1 year
+EMP0068,Jasper Diaz,jasper.diaz@company.com,UX Designer,Design,Remote,2022-07-18,EMP0017,Wireframing;Prototyping;User Testing;Figma;Empathy,,,Skill Development,6 months
+EMP0069,Violet Price,violet.price@company.com,Data Scientist,Data Science,San Francisco CA,2021-04-26,EMP0020,Python;Machine Learning;NLP;Deep Learning;Research,,,Role Change,1 year
+EMP0070,Orion James,orion.james@company.com,ML Engineer,Data Science,New York NY,2020-11-16,EMP0020,Python;PyTorch;Distributed Training;Kubernetes;MLOps,,,Skill Development,6 months
+EMP0071,Hazel Gomez,hazel.gomez@company.com,Data Analyst,Data Science,Austin TX,2022-01-31,EMP0021,SQL;Tableau;Python;Statistics;Business Acumen,,,Role Change,1 year
+EMP0072,Atlas White,atlas.white@company.com,Growth Manager,Marketing,San Francisco CA,2021-03-08,EMP0025,Growth Hacking;SEO;SEM;Analytics;Experimentation,,,Skill Development,6 months
+EMP0073,Luna Martinez,luna.martinez@company.com,Marketing Manager,Marketing,Remote,2020-09-21,EMP0025,Brand Management;Content Strategy;Social Media;Communication,,,Department Transfer,2+ years
+EMP0074,Apollo Turner,apollo.turner@company.com,AE,Sales,San Francisco CA,2021-06-14,EMP0028,Sales Strategy;Enterprise Sales;CRM;Presentation;Relationship Building,,,Skill Development,1 year
+EMP0075,Nova Richardson,nova.richardson@company.com,SDR,Sales,Chicago IL,2022-10-03,EMP0029,Prospecting;Cold Calling;Email Outreach;Communication;Resilience,,,Role Change,6 months
+EMP0076,Felix Watson,felix.watson@company.com,Senior AE,Sales,Boston MA,2020-02-24,EMP0028,Enterprise Sales;Negotiation;Account Planning;Communication;Closing,,,Role Change,6 months
+EMP0077,Aurora Brooks,aurora.brooks@company.com,Talent Partner,HR,San Francisco CA,2021-08-09,EMP0033,Technical Recruiting;Interviewing;Candidate Experience;Communication;Sourcing,,,Skill Development,1 year
+EMP0078,Cyrus Kelly,cyrus.kelly@company.com,HR Manager,HR,Remote,2020-07-06,EMP0033,Compensation;Benefits;HRIS;Employee Engagement;Communication,,,Role Change,1 year
+EMP0079,Piper Sanders,piper.sanders@company.com,Financial Analyst,Finance,San Francisco CA,2022-03-21,EMP0037,Financial Modeling;Excel;Forecasting;Analysis;Attention to Detail,,,Skill Development,6 months
+EMP0080,Darius Price,darius.price@company.com,Finance Manager,Finance,New York NY,2020-05-11,EMP0036,FP&A;Budgeting;Financial Analysis;Communication;Process Improvement,,,Role Change,1 year
+EMP0081,Stella Bennett,stella.bennett@company.com,Legal Counsel,Legal,San Francisco CA,2021-01-25,EMP0039,Corporate Law;M&A;Contract Review;Research;Writing,,,Skill Development,1 year
+EMP0082,Phoebe Ross,phoebe.ross@company.com,Ops Manager,Operations,Seattle WA,2020-10-05,EMP0041,Supply Chain;Vendor Management;Process Improvement;Data Analysis,,,Role Change,6 months
+EMP0083,Zane Henderson,zane.henderson@company.com,Ops Coordinator,Operations,Austin TX,2022-06-20,EMP0042,Documentation;Scheduling;Communication;Organization;Excel,,,Role Change,1 year
+EMP0084,Ada Jenkins,ada.jenkins@company.com,CS Manager,Customer Success,San Francisco CA,2020-03-02,EMP0044,Team Management;Customer Success;Data Analysis;Communication;Coaching,,,Leadership Track,1 year
+EMP0085,Knox Perry,knox.perry@company.com,Senior CSM,Customer Success,Remote,2020-08-17,EMP0044,Enterprise CSM;Onboarding;Renewals;Communication;Problem Solving,,,Skill Development,6 months
+EMP0086,Ivy Powell,ivy.powell@company.com,CSM,Customer Success,Denver CO,2021-12-06,EMP0045,Customer Onboarding;Account Management;Communication;Time Management,,,Role Change,1 year
+EMP0087,Rhys Hughes,rhys.hughes@company.com,Security Engineer,Security,San Francisco CA,2021-02-15,EMP0048,Cloud Security;AWS;Terraform;Python;Security Automation,AWS Certified Solutions Architect,,,Skill Development,1 year
+EMP0088,Gemma Flores,gemma.flores@company.com,Security Analyst,Security,Boston MA,2022-04-04,EMP0048,Vulnerability Assessment;SIEM;Documentation;Communication;Detail Oriented,,,Role Change,6 months
+EMP0089,Beau Butler,beau.butler@company.com,IT Support,IT,San Francisco CA,2022-08-15,EMP0052,Hardware Support;Software Installation;Ticketing;Customer Service,,,Skill Development,6 months
+EMP0090,Wren Simmons,wren.simmons@company.com,IT Manager,IT,Remote,2021-01-11,EMP0051,IT Infrastructure;Network Security;Vendor Management;Communication,,,Role Change,1 year
+EMP0091,Blaire Griffin,blaire.griffin@company.com,Research Scientist,Research,San Francisco CA,2021-07-26,EMP0054,Research;Python;Data Analysis;Scientific Writing;Lab Techniques,PhD,Cornell University,PhD,Neuroscience,Skill Development,6 months
+EMP0092,Cole Russell,cole.russell@company.com,Senior Researcher,Research,Boston MA,2020-04-20,EMP0054,Research;Machine Learning;Computational Biology;Python;R,,,Leadership Track,1-2 years
+EMP0093,Faye Porter,faye.porter@company.com,Research Scientist,Research,Remote,2022-02-28,EMP0054,Research;CRISPR;Lab Management;Data Analysis;Writing,PhD,UCLA,PhD,Genetics,,
+EMP0094,Jude Murphy,jude.murphy@company.com,Staff Engineer,Engineering,San Francisco CA,2018-06-11,EMP0001,Distributed Systems;Go;Kubernetes;System Design;Mentorship,,,Leadership Track,1 year
+EMP0095,Sage Bell,sage.bell@company.com,Senior Engineer,Engineering,Seattle WA,2019-09-16,EMP0094,Python;Backend;APIs;PostgreSQL;Code Review,,,Skill Development,6 months
+EMP0096,Reed Ward,reed.ward@company.com,Software Engineer,Engineering,New York NY,2021-10-25,EMP0094,JavaScript;React;TypeScript;Testing;Git,,,Role Change,1 year
+EMP0097,June Howard,june.howard@company.com,Senior Engineer,Engineering,Austin TX,2020-01-06,EMP0094,Frontend;React;Accessibility;Performance;Mentorship,,,Leadership Track,6 months
+EMP0098,Knox Stevens,knox.stevens@company.com,Software Engineer,Engineering,Chicago IL,2022-05-30,EMP0060,Backend;Python;FastAPI;Docker;Linux,,,Skill Development,1 year
+EMP0099,Elm Cooper,elm.cooper@company.com,PM,Product,San Francisco CA,2022-09-05,EMP0012,Product Strategy;User Research;Analytics;Communication,,,Role Change,1-2 years
+EMP0100,Neve Diaz,neve.diaz@company.com,Product Designer,Design,Remote,2022-11-14,EMP0016,Figma;UI Design;Prototyping;Design Systems;Visual Design,,,Skill Development,6 months
+EMP0101,Colt White,colm.white@company.com,Data Scientist,Data Science,San Francisco CA,2021-12-20,EMP0020,Python;Machine Learning;Causal Inference;Experimentation;Communication,,,Role Change,1 year
+EMP0102,Zara Martinez,zara.martinez@company.com,Marketing Coordinator,Marketing,New York NY,2022-07-04,EMP0025,Social Media;Content Creation;Canva;Communication;Organization,,,Skill Development,6 months
+EMP0103,Brix Richardson,brix.richardson@company.com,AE,Sales,San Francisco CA,2021-05-23,EMP0028,SMB Sales;CRM;Cold Calling;Presentation;Communication,,,Role Change,1 year
+EMP0104,Lyle Brooks,lyle.brooks@company.com,SDR,Sales,Austin TX,2022-12-18,EMP0029,Prospecting;Cold Calling;LinkedIn Sales Navigator;Communication,,,Role Change,6 months
+EMP0105,Clew Kelly,clew.kelly@company.com,HR Coordinator,HR,Remote,2022-08-29,EMP0033,Onboarding;HRIS;Employee Engagement;Communication;Attention to Detail,,,Skill Development,1 year
+EMP0106,Dree Price,dree.price@company.com,Financial Analyst,Finance,Boston MA,2022-04-11,EMP0037,Excel;Financial Modeling;Analysis;Research;Presentation,,,Skill Development,6 months
+EMP0107,Tru Bennett,tru.bennett@company.com,Paralegal,Legal,San Francisco CA,2021-11-01,EMP0039,Document Review;Legal Research;Case Management;Writing;Organization,,,Department Transfer,2+ years
+EMP0108,Bex Ross,bex.ross@company.com,Ops Coordinator,Operations,Seattle WA,2022-10-16,EMP0042,Process Documentation;Scheduling;Communication;Excel;Multitasking,,,Role Change,1 year
+EMP0109,Zen Perry,zen.perry@company.com,CSM,Customer Success,San Francisco CA,2022-01-17,EMP0045,Customer Onboarding;Support;Communication;Problem Solving;Patience,,,Skill Development,6 months
+EMP0110,Nex Hughes,nex.hughes@company.com,Security Analyst,Security,Remote,2022-09-12,EMP0048,Security Monitoring;Incident Response;Documentation;Communication;Curiosity,,,Role Change,1 year
+EMP0111,Flyn Butler,flyn.butler@company.com,IT Support,IT,Denver CO,2022-11-28,EMP0052,Troubleshooting;Hardware;Software;Customer Service;Documentation,,,Skill Development,6 months
+EMP0112,Sola Griffin,sola.griffin@company.com,Research Assistant,Research,San Francisco CA,2022-06-05,EMP0054,Lab Support;Data Entry;Literature Review;Organization;Attention to Detail,,,Role Change,1-2 years
+EMP0113,Tryg Russell,tryg.russell@company.com,Research Scientist,Research,Boston MA,2021-03-15,EMP0054,Research;Computational Methods;Python;Scientific Writing;Grant Support,PhD,Harvard University,PhD,Mathematics,Skill Development,6 months
+EMP0114,Ames Diaz,ames.diaz@company.com,Software Engineer,Engineering,San Francisco CA,2022-07-11,EMP0057,Full Stack;TypeScript;React;Node.js;AWS;Teamwork,,,Skill Development,1 year
+EMP0115,Kymber White,kymber.white@company.com,Senior Engineer,Engineering,Remote,2020-05-04,EMP0001,Backend;Python;Distributed Systems;Mentorship;Code Quality,,,Leadership Track,6 months
+EMP0116,Phelix Gomez,phelix.gomez@company.com,Software Engineer,Engineering,Seattle WA,2022-03-07,EMP0057,Frontend;JavaScript;CSS;React;Accessibility,,,Skill Development,1 year
+EMP0117,Bree Henderson,bree.henderson@company.com,PM,Product,New York NY,2022-08-01,EMP0012,Product Strategy;User Research;Agile;Communication;Prioritization,,,Role Change,1 year
+EMP0118,Yves Turner,yves.turner@company.com,Product Designer,Design,Austin TX,2022-10-23,EMP0016,Figma;UX Research;Prototyping;Visual Design;Collaboration,,,Skill Development,6 months
+EMP0119,Cleo James,cleo.james@company.com,Data Analyst,Data Science,San Francisco CA,2022-05-16,EMP0021,SQL;Python;Tableau;Business Intelligence;Communication,,,Role Change,1 year
+EMP0120,Rocky Martinez,rocky.martinez@company.com,Growth Manager,Marketing,Remote,2021-11-22,EMP0025,Performance Marketing;SEO;Google Ads;Analytics;Experimentation,,,Skill Development,6 months

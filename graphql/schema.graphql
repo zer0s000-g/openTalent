@@ -1,0 +1,443 @@
+# Core Types
+
+type Employee {
+  id: ID!
+  employee_id: String! @unique
+  name: String!
+  email: String @unique
+  title: String
+  department: String
+  location: String
+  hired_date: Date
+  manager: Employee @relationship(type: "REPORTS_TO", direction: IN)
+  directReports: [Employee!]! @relationship(type: "REPORTS_TO", direction: OUT)
+  skills: [Skill!]! @relationship(type: "HAS_SKILL", direction: OUT, properties: "SkillProficiency")
+  certifications: [Certification!]! @relationship(type: "HOLDS_CERTIFICATION", direction: OUT)
+  education: [Education!]! @relationship(type: "HAS_EDUCATION", direction: OUT)
+  role: Role @relationship(type: "HAS_ROLE", direction: OUT)
+  aspirations: [Aspiration!]! @relationship(type: "ASPIRES_TO", direction: OUT)
+}
+
+type Skill {
+  id: ID!
+  name: String! @unique
+  category: String
+  employees: [Employee!]! @relationship(type: "HAS_SKILL", direction: IN)
+}
+
+type Certification {
+  id: ID!
+  name: String! @unique
+  issuer: String
+  expiryDate: Date
+  employees: [Employee!]! @relationship(type: "HOLDS_CERTIFICATION", direction: IN)
+}
+
+type Education {
+  id: ID!
+  institution: String!
+  degree: String
+  field: String
+  year: Int
+  employees: [Employee!]! @relationship(type: "HAS_EDUCATION", direction: IN)
+}
+
+type Role {
+  id: ID!
+  title: String! @unique
+  level: String
+  jobFamily: String
+  employees: [Employee!]! @relationship(type: "HAS_ROLE", direction: IN)
+}
+
+type Aspiration {
+  id: ID!
+  type: String!
+  targetRole: String
+  targetDepartment: String
+  timeline: String
+  employees: [Employee!]! @relationship(type: "ASPIRES_TO", direction: IN)
+}
+
+type Department {
+  id: ID!
+  name: String! @unique
+  costCenter: String
+  employees: [Employee!]! @relationship(type: "BELONGS_TO_DEPARTMENT", direction: IN)
+}
+
+# Relationship Properties
+interface SkillProficiency {
+  proficiencyLevel: String
+  yearsOfExperience: Float
+}
+
+# Input Types
+
+input CreateEmployeeInput {
+  employee_id: String!
+  name: String!
+  email: String
+  title: String
+  department: String
+  location: String
+  hired_date: Date
+  manager_id: String
+}
+
+input UpdateEmployeeInput {
+  name: String
+  email: String
+  title: String
+  department: String
+  location: String
+  hired_date: Date
+  manager_id: String
+}
+
+input CreateSkillInput {
+  name: String!
+  category: String
+}
+
+input CreateCertificationInput {
+  name: String!
+  issuer: String
+  expiryDate: Date
+}
+
+input CreateEducationInput {
+  institution: String!
+  degree: String
+  field: String
+  year: Int
+}
+
+input CreateRoleInput {
+  title: String!
+  level: String
+  jobFamily: String
+}
+
+input CreateAspirationInput {
+  type: String!
+  targetRole: String
+  targetDepartment: String
+  timeline: String
+}
+
+input CreateDepartmentInput {
+  name: String!
+  costCenter: String
+}
+
+# Custom Mutations
+
+extend type Mutation {
+  # Employee mutations
+  createEmployee(input: CreateEmployeeInput!): Employee
+    @cypher(statement: """
+    CREATE (e:Employee {
+      employee_id: $input.employee_id,
+      name: $input.name,
+      email: $input.email,
+      title: $input.title,
+      department: $input.department,
+      location: $input.location,
+      hired_date: $input.hired_date
+    })
+    WITH e
+    OPTIONAL MATCH (manager:Employee { employee_id: $input.manager_id })
+    FOREACH (m IN CASE WHEN manager IS NOT NULL THEN [manager] ELSE [] END |
+      CREATE (e)-[:REPORTS_TO]->(m)
+    )
+    RETURN e
+    """)
+
+  updateEmployee(employee_id: String!, input: UpdateEmployeeInput!): Employee
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })
+    SET e.name = coalesce($input.name, e.name)
+    SET e.email = coalesce($input.email, e.email)
+    SET e.title = coalesce($input.title, e.title)
+    SET e.department = coalesce($input.department, e.department)
+    SET e.location = coalesce($input.location, e.location)
+    SET e.hired_date = coalesce($input.hired_date, e.hired_date)
+    WITH e
+    OPTIONAL MATCH (e)-[old_mgr:REPORTS_TO]->()
+    DELETE old_mgr
+    WITH e, $input.manager_id AS manager_id
+    OPTIONAL MATCH (manager:Employee { employee_id: manager_id })
+    FOREACH (m IN CASE WHEN manager IS NOT NULL THEN [manager] ELSE [] END |
+      CREATE (e)-[:REPORTS_TO]->(m)
+    )
+    RETURN e
+    """)
+
+  deleteEmployee(employee_id: String!): Boolean
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })
+    OPTIONAL MATCH (e)-[r:REPORTS_TO]->()
+    DELETE r
+    WITH e
+    MATCH (e)
+    DETACH DELETE e
+    RETURN true
+    """)
+
+  # Skill mutations
+  addSkillToEmployee(employee_id: String!, skillName: String!, proficiencyLevel: String, yearsOfExperience: Float): Employee
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })
+    MERGE (s:Skill { name: $skillName })
+    MERGE (e)-[rel:HAS_SKILL]->(s)
+    SET rel.proficiencyLevel = coalesce($proficiencyLevel, rel.proficiencyLevel)
+    SET rel.yearsOfExperience = coalesce($yearsOfExperience, rel.yearsOfExperience)
+    RETURN e
+    """)
+
+  removeSkillFromEmployee(employee_id: String!, skillName: String!): Employee
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })-[r:HAS_SKILL]->(s:Skill { name: $skillName })
+    DELETE r
+    RETURN e
+    """)
+
+  # Certification mutations
+  addCertificationToEmployee(employee_id: String!, input: CreateCertificationInput!): Employee
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })
+    MERGE (c:Certification { name: $input.name })
+    SET c.issuer = coalesce($input.issuer, c.issuer)
+    SET c.expiryDate = $input.expiryDate
+    MERGE (e)-[:HOLDS_CERTIFICATION]->(c)
+    RETURN e
+    """)
+
+  # Education mutations
+  addEducationToEmployee(employee_id: String!, input: CreateEducationInput!): Employee
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })
+    MERGE (ed:Education { institution: $input.institution, degree: coalesce($input.degree, ''), field: coalesce($input.field, '') })
+    SET ed.year = coalesce($input.year, ed.year)
+    MERGE (e)-[:HAS_EDUCATION]->(ed)
+    RETURN e
+    """)
+
+  # Aspiration mutations
+  addAspirationToEmployee(employee_id: String!, input: CreateAspirationInput!): Employee
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })
+    CREATE (a:Aspiration {
+      type: $input.type,
+      targetRole: $input.targetRole,
+      targetDepartment: $input.targetDepartment,
+      timeline: $input.timeline
+    })
+    CREATE (e)-[:ASPIRES_TO]->(a)
+    RETURN e
+    """)
+
+  # Department mutations
+  createDepartment(input: CreateDepartmentInput!): Department
+}
+
+# Custom Queries
+
+extend type Query {
+  # Search employees by name, skill, or department
+  searchEmployees(query: String!, limit: Int = 50): [Employee!]!
+    @cypher(statement: """
+    CALL db.index.fulltext.queryNodes('employeeName', $query + '*') YIELD node AS emp, score
+    RETURN emp
+    LIMIT toInteger($limit)
+    """, columnName: "emp")
+
+  # Get bounded ego network for an employee (max 2-hop reporting + limited neighbors)
+  getEmployeeNetwork(employee_id: String!, maxHops: Int = 2, maxNeighbors: Int = 50): NetworkResult
+    @cypher(statement: """
+    MATCH (e:Employee { employee_id: $employee_id })
+    WITH e
+
+    // Get reporting chain (up to maxHops)
+    MATCH path=(e)-[:REPORTS_TO*0..$maxHops]-(manager:Employee)
+    WITH e, collect(DISTINCT manager) AS managers
+
+    // Get direct reports
+    MATCH (e)-[:REPORTS_TO]->(direct:Employee)
+    WITH e, managers, collect(DISTINCT direct) AS directs
+
+    // Get skills
+    MATCH (e)-[:HAS_SKILL]->(skill:Skill)
+    WITH e, managers, directs, collect(DISTINCT skill) AS skills
+
+    // Get colleagues in same department (limited)
+    MATCH (deptColleague:Employee)-[:REPORTS_TO*0..1]->()-[:REPORTS_TO*0..1]-(e)
+    WHERE deptColleague.department = e.department AND deptColleague <> e
+    WITH e, managers, directs, skills, collect(DISTINCT deptColleague)[..$maxNeighbors] AS deptColleagues
+
+    WITH e,
+         managers + directs + deptColleagues AS allNodes,
+         skills
+
+    // Deduplicate nodes
+    WITH e, collect(DISTINCT n IN allNodes WHERE n IS NOT NULL) AS nodes, skills
+
+    // Build relationships
+    OPTIONAL MATCH (n)-[r:REPORTS_TO]-(m)
+    WHERE n IN nodes AND m IN nodes
+    WITH e, nodes, skills, collect(DISTINCT {start: n, end: m, type: 'REPORTS_TO'}) AS reportRels
+
+    OPTIONAL MATCH (e)-[r:HAS_SKILL]->(s)
+    WHERE s IN skills
+    WITH e, nodes, skills, reportRels, collect(DISTINCT {start: e, end: s, type: 'HAS_SKILL'}) AS skillRels
+
+    RETURN {
+      center: e,
+      nodes: nodes + skills,
+      relationships: reportRels + skillRels
+    }
+    """)
+
+  # Get employees by department with pagination
+  getEmployeesByDepartment(department: String!, offset: Int = 0, limit: Int = 100): [Employee!]!
+    @cypher(statement: """
+    MATCH (e:Employee { department: $department })
+    RETURN e
+    SKIP toInteger($offset)
+    LIMIT toInteger($limit)
+    """, columnName: "e")
+
+  # Get employees by skill
+  getEmployeesBySkill(skillName: String!, limit: Int = 100): [Employee!]!
+    @cypher(statement: """
+    MATCH (e:Employee)-[:HAS_SKILL]->(s:Skill { name: $skillName })
+    RETURN e
+    LIMIT toInteger($limit)
+    """, columnName: "e")
+
+  # Get department subgraph
+  getDepartmentSubgraph(department: String!, maxEmployees: Int = 100): NetworkResult
+    @cypher(statement: """
+    MATCH (e:Employee { department: $department })
+    WITH collect(e)[..toInteger($maxEmployees)] AS employees
+
+    // Get all relationships within department
+    OPTIONAL MATCH (e1)-[r:REPORTS_TO]-(e2)
+    WHERE e1 IN employees AND e2 IN employees
+
+    // Get skills for these employees
+    OPTIONAL MATCH (e)-[:HAS_SKILL]->(s)
+    WHERE e IN employees
+    WITH employees, collect(DISTINCT r) AS rels, collect(DISTINCT s) AS skills
+
+    WITH employees, rels,
+         [e IN employees | [(e)-[:HAS_SKILL]->(s) | {start: e, end: s, type: 'HAS_SKILL'}]] AS skillRels
+
+    RETURN {
+      center: employees[0],
+      nodes: employees + skills,
+      relationships: rels + flatten(skillRels)
+    }
+    """)
+
+  # Get skill subgraph
+  getSkillSubgraph(skillName: String!, maxEmployees: Int = 100): NetworkResult
+    @cypher(statement: """
+    MATCH (s:Skill { name: $skillName })
+    MATCH (e:Employee)-[:HAS_SKILL]->(s)
+    WITH s, collect(e)[..toInteger($maxEmployees)] AS employees
+
+    // Get reporting relationships among these employees
+    OPTIONAL MATCH (e1)-[r:REPORTS_TO]-(e2)
+    WHERE e1 IN employees AND e2 IN employees
+
+    RETURN {
+      center: s,
+      nodes: [s] + employees,
+      relationships: [rel IN collect(DISTINCT r) WHERE rel IS NOT NULL | {start: startNode(rel), end: endNode(rel), type: type(rel)}]
+    }
+    """)
+
+  # Dashboard stats
+  getDashboardStats: DashboardStats
+    @cypher(statement: """
+    MATCH (e:Employee)
+    WITH count(DISTINCT e) AS totalEmployees
+
+    MATCH (s:Skill)
+    WITH totalEmployees, count(DISTINCT s) AS totalSkills
+
+    MATCH (e:Employee)
+    WITH totalEmployees, totalSkills, collect(DISTINCT e.department) AS allDepts
+    UNWIND allDepts AS dept
+    WITH totalEmployees, totalSkills, dept
+    WHERE dept IS NOT NULL AND dept <> ''
+
+    MATCH (d:Employee { department: dept })
+    WITH totalEmployees, totalSkills, dept, count(DISTINCT d) AS count
+
+    RETURN {
+      totalEmployees: totalEmployees,
+      totalSkills: totalSkills,
+      departments: collect({ name: dept, count: count }),
+      totalDepartments: size(collect({ name: dept, count: count }))
+    }
+    """)
+
+  # Full-text search (more flexible than default)
+  fullTextSearch(term: String!, type: String = "all", limit: Int = 50): [SearchResult!]!
+    @cypher(statement: """
+    CALL db.index.fulltext.queryNodes('employeeName', $term + '*') YIELD node AS emp, score
+    RETURN {
+      type: 'Employee',
+      id: emp.employee_id,
+      name: emp.name,
+      details: emp.title
+    }
+    LIMIT toInteger($limit)
+    """)
+}
+
+# Custom Types for Query Results
+
+type NetworkResult {
+  center: Employee
+  nodes: [Node!]!
+  relationships: [Relationship!]!
+}
+
+type Node {
+  id: ID!
+  labels: [String!]!
+  properties: Map!
+}
+
+type Relationship {
+  start: Node!
+  end: Node!
+  type: String!
+  properties: Map
+}
+
+type DashboardStats {
+  totalEmployees: Int!
+  totalSkills: Int!
+  totalDepartments: Int!
+  departments: [DepartmentCount!]!
+}
+
+type DepartmentCount {
+  name: String!
+  count: Int!
+}
+
+type SearchResult {
+  type: String!
+  id: String!
+  name: String!
+  details: String
+}
+
+# Indexes (created via migration script)
+# CREATE FULLTEXT INDEX employeeName FOR (e:Employee) ON EACH [e.name]

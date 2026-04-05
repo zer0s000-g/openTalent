@@ -1,0 +1,50 @@
+{
+  "name": "opentalent",
+  "version": "0.1.0",
+  "private": true,
+  "overrides": {
+    "graphql": "^16.8.1"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "seed": "tsx scripts/seed.ts",
+    "import:sample": "tsx scripts/import-employees.ts data/sample-employees.csv"
+  },
+  "dependencies": {
+    "@neo4j/graphql": "^5.5.0",
+    "dotenv": "^17.4.0",
+    "graphql": "^16.8.1",
+    "neo4j-driver": "^5.17.0",
+    "next": "14.1.0",
+    "papaparse": "^5.4.1",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "sigma": "^3.0.2",
+    "zod": "^3.22.4"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "^6.4.0",
+    "@testing-library/react": "^14.1.2",
+    "@types/node": "^20.11.0",
+    "@types/papaparse": "^5.3.14",
+    "@types/react": "^18.2.48",
+    "@types/react-dom": "^18.2.18",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "autoprefixer": "^10.4.17",
+    "eslint": "^8.56.0",
+    "eslint-config-next": "14.1.0",
+    "jsdom": "^24.0.0",
+    "postcss": "^8.4.33",
+    "tailwindcss": "^3.4.1",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3",
+    "vitest": "^1.2.2"
+  }
+}
