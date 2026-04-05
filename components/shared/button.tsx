@@ -11,12 +11,12 @@ export function Button({
   className = '',
   ...props
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-md transition-colors'
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all duration-200 shadow-sm hover:shadow active:scale-[0.98]'
 
   const variantStyles = {
-    primary: 'bg-primary-600 text-white hover:bg-primary-700',
-    secondary: 'bg-white text-gray-700 border border-gray-300 hover:bg-gray-50',
-    ghost: 'text-gray-600 hover:bg-gray-100',
+    primary: 'bg-primary-600 text-white hover:bg-primary-700 border border-transparent',
+    secondary: 'bg-white text-gray-700 border border-gray-200 hover:border-gray-300 hover:bg-gray-50',
+    ghost: 'text-gray-600 hover:bg-gray-100 shadow-none hover:shadow-none',
   }
 
   const sizeStyles = {
