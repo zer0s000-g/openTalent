@@ -38,13 +38,15 @@ vi.mock('@/components/shared/button', () => ({
     onClick,
     disabled,
     className,
+    ...props
   }: {
     children: ReactNode
     onClick?: () => void
     disabled?: boolean
     className?: string
+    [key: string]: unknown
   }) => (
-    <button type="button" onClick={onClick} disabled={disabled} className={className}>
+    <button type="button" onClick={onClick} disabled={disabled} className={className} {...props}>
       {children}
     </button>
   ),
@@ -470,5 +472,63 @@ describe('GraphExplorerPage skill flow', () => {
 
     expect(mockFetch).toHaveBeenCalledTimes(4)
     expect(String(mockFetch.mock.calls.at(-1)?.[1]?.body)).toContain('getDepartmentSubgraph')
+  })
+
+  it('uses the same fullscreen entry and exit pattern as the location map', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getDashboardStats: {
+              departments: [{ name: 'Engineering', count: 36 }],
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            skills: [{ name: 'Python', employeeCount: 29 }],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getEnterpriseGraphOverview: {
+              center: {
+                id: 'emp-1',
+                labels: ['Employee'],
+                properties: { name: 'James Smith', employee_id: 'EMP0001', department: 'Executive' },
+              },
+              nodes: [
+                {
+                  id: 'emp-1',
+                  labels: ['Employee'],
+                  properties: { name: 'James Smith', employee_id: 'EMP0001', department: 'Executive' },
+                },
+              ],
+              relationships: [],
+            },
+          },
+        }),
+      })
+
+    render(<GraphExplorerPage />)
+
+    await screen.findByText('Interactive exploration canvas')
+    expect(screen.getByText('View full screen graph')).toHaveAttribute('variant', 'primary')
+    expect(screen.getByLabelText('Open full screen graph')).toBeInTheDocument()
+
+    fireEvent.click(screen.getByText('View full screen graph'))
+
+    expect(await screen.findByText('Exit full screen')).toHaveAttribute('variant', 'primary')
+    expect(screen.getByText('Press `Esc` to exit full screen mode.')).toBeInTheDocument()
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    await waitFor(() => {
+      expect(screen.queryByText('Exit full screen')).not.toBeInTheDocument()
+    })
   })
 })

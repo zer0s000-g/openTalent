@@ -3,6 +3,7 @@
 import React from 'react'
 import { useEffect, useMemo, useState } from 'react'
 import { AppLayout } from '@/components/layout/app-layout'
+import { WorkforceAssistantCard } from '@/components/dashboard/workforce-assistant-card'
 import { Badge } from '@/components/shared/badge'
 import { Button } from '@/components/shared/button'
 import { Card } from '@/components/shared/card'
@@ -333,7 +334,8 @@ export default function DashboardPage() {
         </section>
       </div>
 
-      <div className="grid gap-6 px-6 xl:grid-cols-[minmax(0,1.3fr)_minmax(0,0.7fr)]">
+      <div className="grid gap-6 px-6">
+        <WorkforceAssistantCard />
         <Card className="overflow-hidden">
           <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
@@ -454,27 +456,6 @@ export default function DashboardPage() {
             ) : (
               <EmptyState title="No graph data" description="The organization overview could not be loaded." />
             )}
-          </div>
-        </Card>
-
-        <Card>
-          <p className="section-label">Department Mix</p>
-          <h3 className="mt-3 font-display text-2xl font-semibold text-ink-900">Where the workforce is concentrated</h3>
-          <div className="mt-6 space-y-4">
-            {stats.topDepartments.map((department) => {
-              const width = stats.totalEmployees ? Math.max((department.count / stats.totalEmployees) * 100, 8) : 0
-              return (
-                <div key={department.name}>
-                  <div className="mb-2 flex items-center justify-between gap-4">
-                    <p className="truncate text-sm font-medium text-ink-700">{department.name}</p>
-                    <p className="text-sm text-ink-500">{department.count}</p>
-                  </div>
-                  <div className="h-2 rounded-full bg-slate-100">
-                    <div className="h-2 rounded-full bg-gradient-to-r from-primary-500 to-cyan-400" style={{ width: `${width}%` }} />
-                  </div>
-                </div>
-              )
-            })}
           </div>
         </Card>
       </div>

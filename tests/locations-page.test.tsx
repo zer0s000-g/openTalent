@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import LocationsPage from '@/app/locations/page'
 
@@ -30,13 +30,15 @@ vi.mock('@/components/shared/button', () => ({
     onClick,
     disabled,
     className,
+    ...props
   }: {
     children: ReactNode
     onClick?: () => void
     disabled?: boolean
     className?: string
+    [key: string]: unknown
   }) => (
-    <button type="button" onClick={onClick} disabled={disabled} className={className}>
+    <button type="button" onClick={onClick} disabled={disabled} className={className} {...props}>
       {children}
     </button>
   ),
@@ -177,5 +179,149 @@ describe('LocationsPage', () => {
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledTimes(5)
     })
+  })
+
+  it('opens the map in full screen mode and closes it with Escape', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            skills: [{ name: 'Python', employeeCount: 29 }],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getDashboardStats: {
+              departments: [{ name: 'Engineering', count: 36 }],
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getLocationRoleOptions: [{ name: 'Software Engineer', count: 20 }],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getIndonesiaLocationFootprint: [
+              {
+                city: 'Jakarta',
+                province: 'DKI Jakarta',
+                lat: -6.2,
+                lng: 106.8,
+                employeeCount: 24,
+                departments: [{ name: 'Engineering', count: 10 }],
+                roles: [{ name: 'Software Engineer', count: 8 }],
+                topSkills: [{ name: 'Communication', count: 12 }],
+              },
+            ],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getLocationDetail: {
+              city: 'Jakarta',
+              province: 'DKI Jakarta',
+              lat: -6.2,
+              lng: 106.8,
+              employeeCount: 24,
+              departments: [{ name: 'Engineering', count: 10 }],
+              roles: [{ name: 'Software Engineer', count: 8 }],
+              topSkills: [{ name: 'Communication', count: 12 }],
+              employees: [],
+            },
+          },
+        }),
+      })
+
+    render(<LocationsPage />)
+
+    await screen.findByText('City-based workforce distribution')
+    expect(screen.getByText('View full screen map')).toHaveAttribute('variant', 'primary')
+    fireEvent.click(screen.getByText('View full screen map'))
+
+    expect(await screen.findByText('Exit full screen')).toHaveAttribute('variant', 'primary')
+    expect(screen.getByText('Press `Esc` to exit full screen mode.')).toBeInTheDocument()
+
+    fireEvent.keyDown(window, { key: 'Escape' })
+
+    await waitFor(() => {
+      expect(screen.queryByText('Exit full screen')).not.toBeInTheDocument()
+    })
+  })
+
+  it('exposes a map-corner full screen affordance in the standard layout', async () => {
+    mockFetch
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            skills: [{ name: 'Python', employeeCount: 29 }],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getDashboardStats: {
+              departments: [{ name: 'Engineering', count: 36 }],
+            },
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getLocationRoleOptions: [{ name: 'Software Engineer', count: 20 }],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getIndonesiaLocationFootprint: [
+              {
+                city: 'Jakarta',
+                province: 'DKI Jakarta',
+                lat: -6.2,
+                lng: 106.8,
+                employeeCount: 24,
+                departments: [{ name: 'Engineering', count: 10 }],
+                roles: [{ name: 'Software Engineer', count: 8 }],
+                topSkills: [{ name: 'Communication', count: 12 }],
+              },
+            ],
+          },
+        }),
+      })
+      .mockResolvedValueOnce({
+        json: async () => ({
+          data: {
+            getLocationDetail: {
+              city: 'Jakarta',
+              province: 'DKI Jakarta',
+              lat: -6.2,
+              lng: 106.8,
+              employeeCount: 24,
+              departments: [{ name: 'Engineering', count: 10 }],
+              roles: [{ name: 'Software Engineer', count: 8 }],
+              topSkills: [{ name: 'Communication', count: 12 }],
+              employees: [],
+            },
+          },
+        }),
+      })
+
+    render(<LocationsPage />)
+
+    await screen.findByText('City-based workforce distribution')
+    expect(screen.getByLabelText('Open full screen map')).toBeInTheDocument()
   })
 })

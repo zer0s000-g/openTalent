@@ -105,11 +105,15 @@ describe('DashboardPage leadership snapshot', () => {
 
     render(<DashboardPage />)
 
+    await screen.findByText('Workforce Assistant')
     await screen.findByText('Leadership network snapshot')
     expect(screen.getByText('2 direct reports')).toBeInTheDocument()
     expect(screen.getByText('2 functions')).toBeInTheDocument()
     expect(screen.getAllByText('Leadership').length).toBeGreaterThan(0)
     expect(screen.getByText('Open full talent graph')).toBeInTheDocument()
+    expect(screen.queryByText('Department Mix')).not.toBeInTheDocument()
+    expect(screen.queryByText('Response Pattern')).not.toBeInTheDocument()
+    expect(screen.getByText('Start with a grounded workforce question')).toBeInTheDocument()
 
     await waitFor(() => {
       expect(mockFetch).toHaveBeenCalledTimes(2)

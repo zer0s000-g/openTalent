@@ -29,6 +29,8 @@ interface IndonesiaFootprintMapProps {
   cities: FootprintCity[]
   selectedCity: string | null
   onSelectCity: (city: string) => void
+  svgClassName?: string
+  expandedLabels?: boolean
 }
 
 const islandLabels = [
@@ -44,6 +46,8 @@ export function IndonesiaFootprintMap({
   cities,
   selectedCity,
   onSelectCity,
+  svgClassName,
+  expandedLabels = false,
 }: IndonesiaFootprintMapProps) {
   const maxCount = Math.max(...cities.map((city) => city.employeeCount), 0)
   const provinceShapes = useMemo(() => getIndonesiaProvinceShapes(), [])
@@ -68,14 +72,14 @@ export function IndonesiaFootprintMap({
   const visibleLabels = useMemo(() => {
     const topCities = [...cities]
       .sort((left, right) => right.employeeCount - left.employeeCount)
-      .slice(0, 10)
+      .slice(0, expandedLabels ? 14 : 10)
       .map((city) => city.city)
     return new Set(selectedCity ? [...topCities, selectedCity] : topCities)
-  }, [cities, selectedCity])
+  }, [cities, expandedLabels, selectedCity])
 
   return (
     <div className="relative overflow-hidden rounded-[28px] border border-[color:var(--border)] bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.10),transparent_42%),linear-gradient(180deg,#f8fbff_0%,#edf4fb_100%)]">
-      <svg viewBox="0 0 1000 560" className="h-[34rem] w-full">
+      <svg viewBox="0 0 1000 560" className={svgClassName || 'h-[34rem] w-full'}>
         <defs>
           <linearGradient id="footprintGlow" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stopColor="rgba(59,130,246,0.34)" />

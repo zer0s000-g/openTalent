@@ -37,6 +37,19 @@ interface MetricOption {
 type ViewMode = 'enterprise' | 'employee' | 'department' | 'skill'
 type ActiveGraphMode = 'enterprise' | ViewMode
 
+function FullscreenIcon({ expanded }: { expanded: boolean }) {
+  return (
+    <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="h-4 w-4">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3H3v4M13 3h4v4M17 13v4h-4M3 13v4h4" />
+      {expanded ? (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 7 3 3m10 4 4-4m-4 10 4 4M7 13l-4 4" />
+      ) : (
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3 3 7m10-4 4 4m-4 10 4-4M7 17l-4-4" />
+      )}
+    </svg>
+  )
+}
+
 function toCount(value: unknown): number {
   if (typeof value === 'number') return value
   if (value && typeof value === 'object') {
@@ -620,23 +633,28 @@ function GraphExplorerPageContent() {
           )}
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-col items-start gap-3 lg:items-end">
           <Button
-            variant="secondary"
+            variant="primary"
             size="sm"
+            className="shadow-[0_14px_30px_rgba(15,23,42,0.14)]"
             onClick={() => setIsGraphFullscreen((current) => !current)}
           >
-            {fullscreen ? 'Exit full screen' : 'Full screen'}
+            <FullscreenIcon expanded={fullscreen} />
+            {fullscreen ? 'Exit full screen' : 'View full screen graph'}
           </Button>
-          <Button variant="secondary" size="sm" onClick={() => canvasRef.current?.zoomOut()}>
-            Zoom out
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => canvasRef.current?.resetView()}>
-            Reset view
-          </Button>
-          <Button variant="secondary" size="sm" onClick={() => canvasRef.current?.zoomIn()}>
-            Zoom in
-          </Button>
+
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" size="sm" onClick={() => canvasRef.current?.zoomOut()}>
+              Zoom out
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => canvasRef.current?.resetView()}>
+              Reset view
+            </Button>
+            <Button variant="secondary" size="sm" onClick={() => canvasRef.current?.zoomIn()}>
+              Zoom in
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -688,6 +706,20 @@ function GraphExplorerPageContent() {
               {loading && (
                 <div className="absolute inset-0 z-10 flex items-center justify-center rounded-[28px] bg-white/70 backdrop-blur-sm">
                   <LoadingSpinner size="lg" />
+                </div>
+              )}
+
+              {!fullscreen && (
+                <div className="absolute right-4 top-4 z-10">
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    aria-label="Open full screen graph"
+                    className="rounded-full bg-white/94 px-3 shadow-[0_10px_30px_rgba(15,23,42,0.12)]"
+                    onClick={() => setIsGraphFullscreen(true)}
+                  >
+                    <FullscreenIcon expanded={false} />
+                  </Button>
                 </div>
               )}
 

@@ -59,6 +59,7 @@ export default function LocationsPage() {
   const [selectedRole, setSelectedRole] = useState('')
   const [selectedCity, setSelectedCity] = useState<string | null>(null)
   const [locationDetail, setLocationDetail] = useState<LocationDetail | null>(null)
+  const [isMapFullscreen, setIsMapFullscreen] = useState(false)
   const [bootstrapping, setBootstrapping] = useState(true)
   const [loadingFootprint, setLoadingFootprint] = useState(true)
   const [loadingDetail, setLoadingDetail] = useState(false)
@@ -240,6 +241,135 @@ export default function LocationsPage() {
 
   const summary = useMemo(() => summarizeFootprint(footprint), [footprint])
 
+  useEffect(() => {
+    if (!isMapFullscreen) return
+
+    const previousOverflow = document.body.style.overflow
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        setIsMapFullscreen(false)
+      }
+    }
+
+    document.body.style.overflow = 'hidden'
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      document.body.style.overflow = previousOverflow
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [isMapFullscreen])
+
+  const renderMapExperience = (fullscreen = false) => (
+    <Card className={fullscreen ? 'flex h-full flex-col overflow-hidden rounded-[32px] bg-white/95 shadow-[0_30px_90px_rgba(15,23,42,0.18)]' : ''}>
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+        <div>
+          <p className="section-label">Indonesia Map</p>
+          <h3 className={`mt-3 font-display font-semibold text-ink-900 ${fullscreen ? 'text-4xl lg:text-5xl' : 'text-2xl'}`}>
+            City-based workforce distribution
+          </h3>
+          <p className={`mt-2 max-w-2xl leading-6 text-ink-500 ${fullscreen ? 'text-base' : 'text-sm'}`}>
+            Bubble size reflects employee count in each city after filters are applied. Click a city to inspect its dominant roles, skills, and employees.
+          </p>
+          {fullscreen && (
+            <p className="mt-3 text-sm text-ink-400">Press `Esc` to exit full screen mode.</p>
+          )}
+        </div>
+        <div className="flex flex-col items-start gap-3 lg:items-end">
+          <Button
+            variant="primary"
+            size="sm"
+            className="shadow-[0_14px_30px_rgba(15,23,42,0.14)]"
+            onClick={() => setIsMapFullscreen((current) => !current)}
+          >
+            <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="h-4 w-4">
+              {fullscreen ? (
+                <>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3H3v4M13 3h4v4M17 13v4h-4M3 13v4h4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 7 3 3m10 4 4-4m-4 10 4 4M7 13l-4 4" />
+                </>
+              ) : (
+                <>
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3H3v4M13 3h4v4M17 13v4h-4M3 13v4h4" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3 3 7m10-4 4 4m-4 10 4-4M7 17l-4-4" />
+                </>
+              )}
+            </svg>
+            {fullscreen ? 'Exit full screen' : 'View full screen map'}
+          </Button>
+
+          <div className="flex flex-wrap gap-2">
+            <Badge color="blue">City bubbles</Badge>
+            <Badge color="green">Skill-aware</Badge>
+            <Badge color="gray">{footprint.length} cities active</Badge>
+            {selectedSkill && <Badge color="blue">{selectedSkill}</Badge>}
+            {selectedRole && <Badge color="gray">{selectedRole}</Badge>}
+            {selectedDepartment && <Badge color="yellow">{selectedDepartment}</Badge>}
+          </div>
+        </div>
+      </div>
+
+      <div className={fullscreen ? 'mt-6 min-h-0 flex-1' : 'mt-6'}>
+        {loadingFootprint && !footprint.length ? (
+          <div className={`flex items-center justify-center rounded-[28px] border border-[color:var(--border)] bg-white/68 ${fullscreen ? 'h-full min-h-[24rem]' : 'h-[34rem]'}`}>
+            <LoadingSpinner size="lg" />
+          </div>
+        ) : footprint.length > 0 ? (
+          fullscreen ? (
+            <div className="grid h-full min-h-0 gap-6 xl:grid-cols-[minmax(0,1fr)_360px]">
+              <div className="min-h-0">
+                <IndonesiaFootprintMap
+                  cities={footprint}
+                  selectedCity={selectedCity}
+                  onSelectCity={setSelectedCity}
+                  expandedLabels
+                  svgClassName="h-[calc(100vh-16rem)] min-h-[34rem] w-full"
+                />
+              </div>
+
+              <div className="min-h-0 overflow-y-auto pr-1">
+                <LocationDetailPanel
+                  detail={locationDetail}
+                  loading={loadingDetail}
+                  error={detailError}
+                  footprint={footprint}
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="relative">
+              <div className="absolute right-4 top-4 z-10">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  aria-label="Open full screen map"
+                  className="rounded-full bg-white/94 px-3 shadow-[0_10px_30px_rgba(15,23,42,0.12)]"
+                  onClick={() => setIsMapFullscreen(true)}
+                >
+                  <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" className="h-4 w-4">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3H3v4M13 3h4v4M17 13v4h-4M3 13v4h4" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M7 3 3 7m10-4 4 4m-4 10 4-4M7 17l-4-4" />
+                  </svg>
+                </Button>
+              </div>
+
+              <IndonesiaFootprintMap
+                cities={footprint}
+                selectedCity={selectedCity}
+                onSelectCity={setSelectedCity}
+              />
+            </div>
+          )
+        ) : (
+          <EmptyState
+            title="No mapped workforce for these filters"
+            description="Try clearing one or more filters to bring cities back onto the Indonesia map."
+          />
+        )}
+      </div>
+    </Card>
+  )
+
   if (bootstrapping) {
     return (
       <AppLayout>
@@ -362,41 +492,7 @@ export default function LocationsPage() {
               </Card>
             </div>
 
-            <Card>
-              <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-                <div>
-                  <p className="section-label">Indonesia Map</p>
-                  <h3 className="mt-3 font-display text-2xl font-semibold text-ink-900">City-based workforce distribution</h3>
-                  <p className="mt-2 max-w-2xl text-sm leading-6 text-ink-500">
-                    Bubble size reflects employee count in each city after filters are applied. Click a city to inspect its dominant roles, skills, and employees.
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  <Badge color="blue">City bubbles</Badge>
-                  <Badge color="green">Skill-aware</Badge>
-                  <Badge color="gray">{footprint.length} cities active</Badge>
-                </div>
-              </div>
-
-              <div className="mt-6">
-                {loadingFootprint && !footprint.length ? (
-                  <div className="flex h-[34rem] items-center justify-center rounded-[28px] border border-[color:var(--border)] bg-white/68">
-                    <LoadingSpinner size="lg" />
-                  </div>
-                ) : footprint.length > 0 ? (
-                  <IndonesiaFootprintMap
-                    cities={footprint}
-                    selectedCity={selectedCity}
-                    onSelectCity={setSelectedCity}
-                  />
-                ) : (
-                  <EmptyState
-                    title="No mapped workforce for these filters"
-                    description="Try clearing one or more filters to bring cities back onto the Indonesia map."
-                  />
-                )}
-              </div>
-            </Card>
+            {!isMapFullscreen && renderMapExperience()}
           </div>
 
           <LocationDetailPanel
@@ -407,6 +503,14 @@ export default function LocationsPage() {
           />
         </div>
       </div>
+
+      {isMapFullscreen && (
+        <div className="fixed inset-0 z-[80] bg-[linear-gradient(180deg,rgba(241,245,252,0.97)_0%,rgba(232,239,249,0.98)_100%)] p-4 backdrop-blur-sm lg:p-6">
+          <div className="mx-auto h-full max-w-[1800px]">
+            {renderMapExperience(true)}
+          </div>
+        </div>
+      )}
     </AppLayout>
   )
 }
