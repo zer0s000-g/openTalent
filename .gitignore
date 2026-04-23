@@ -1,6 +1,8 @@
 # Dependencies
 node_modules
 .next
+.next-build
+.next-dev
 
 # Environment
 .env.local
