@@ -1,7 +1,9 @@
 import { parse, Kind, type OperationDefinitionNode, type FieldNode } from 'graphql'
 import { NextRequest, NextResponse } from 'next/server'
 import type { QueryResult } from 'neo4j-driver'
+import { getRequestSessionFromHeaders, hasRequiredRole } from '@/lib/auth/session'
 import { getSession } from '@/lib/neo4j'
+import { createRouteLogger } from '@/lib/observability/logger'
 import { getIndonesiaCity } from '@/lib/indonesia-cities'
 
 type ApiQueryConfig = {
@@ -112,6 +114,54 @@ const QUERY_MAP: Record<string, ApiQueryConfig> = {
       return data || { employeesAggregate: { count: 0 }, skillsAggregate: { count: 0 } }
     },
   },
+  getDataFreshnessSummary: {
+    cypher: `
+      CALL {
+        MATCH (e:Employee)
+        RETURN count(e) AS employeeCount
+      }
+      CALL {
+        MATCH (e:Employee)
+        WHERE e.lastImportedAt IS NOT NULL
+        RETURN count(e) AS employeesWithImportMetadata
+      }
+      CALL {
+        MATCH (batch:ImportBatch)
+        RETURN count(batch) AS totalImportBatches
+      }
+      CALL {
+        MATCH (batch:ImportBatch)
+        RETURN batch
+        ORDER BY batch.importedAt DESC
+        LIMIT 1
+      }
+      RETURN {
+        employeeCount: employeeCount,
+        employeesWithImportMetadata: employeesWithImportMetadata,
+        totalImportBatches: totalImportBatches,
+        latestBatchId: batch.id,
+        latestImportSource: batch.filename,
+        latestImportedAt: batch.importedAt,
+        latestWarningCount: batch.warningCount,
+        latestRowsToCreate: batch.rowsToCreate,
+        latestRowsToUpdate: batch.rowsToUpdate
+      } AS result
+    `,
+    transform: (result) => {
+      const data = result.records[0]?.get('result') || {}
+      return {
+        employeeCount: neo4jIntToNumber(data.employeeCount),
+        employeesWithImportMetadata: neo4jIntToNumber(data.employeesWithImportMetadata),
+        totalImportBatches: neo4jIntToNumber(data.totalImportBatches),
+        latestBatchId: data.latestBatchId || null,
+        latestImportSource: data.latestImportSource || null,
+        latestImportedAt: data.latestImportedAt?.toString?.() || null,
+        latestWarningCount: neo4jIntToNumber(data.latestWarningCount),
+        latestRowsToCreate: neo4jIntToNumber(data.latestRowsToCreate),
+        latestRowsToUpdate: neo4jIntToNumber(data.latestRowsToUpdate),
+      }
+    },
+  },
   employees: {
     cypher: `
       MATCH (e:Employee { employee_id: $employee_id })
@@ -149,6 +199,9 @@ const QUERY_MAP: Record<string, ApiQueryConfig> = {
         department: employee.properties.department,
         location: employee.properties.location,
         hired_date: employee.properties.hired_date?.toString(),
+        lastImportedAt: employee.properties.lastImportedAt?.toString(),
+        lastImportSource: employee.properties.lastImportSource,
+        lastImportBatchId: employee.properties.lastImportBatchId,
         manager: manager
           ? {
               employee_id: manager.properties.employee_id,
@@ -235,6 +288,8 @@ const QUERY_MAP: Record<string, ApiQueryConfig> = {
           name: employee.properties.name,
           title: employee.properties.title,
           department: employee.properties.department,
+          lastImportedAt: employee.properties.lastImportedAt?.toString(),
+          lastImportSource: employee.properties.lastImportSource,
         }
       }),
   },
@@ -373,7 +428,9 @@ const QUERY_MAP: Record<string, ApiQueryConfig> = {
           name: employee.name,
           title: employee.title,
           department: employee.department,
-          location: employee.location
+          location: employee.location,
+          lastImportedAt: employee.lastImportedAt,
+          lastImportSource: employee.lastImportSource
         }][..40],
         employeeCount: size(employees),
         departments: departments,
@@ -424,6 +481,8 @@ const QUERY_MAP: Record<string, ApiQueryConfig> = {
           title: employee.title,
           department: employee.department,
           location: employee.location,
+          lastImportedAt: employee.lastImportedAt?.toString?.() || employee.lastImportedAt,
+          lastImportSource: employee.lastImportSource,
         })),
       }
     },
@@ -914,13 +973,25 @@ function getQueryVariables(queryField: string, rawVariables: Record<string, unkn
 }
 
 export async function POST(request: NextRequest) {
+  const routeLogger = createRouteLogger(request, 'graphql')
+
   try {
+    const session = getRequestSessionFromHeaders(request.headers)
+    if (!hasRequiredRole(session, 'viewer')) {
+      routeLogger.warn('forbidden')
+      return NextResponse.json(
+        { errors: [{ message: 'Authenticated internal access is required' }] },
+        { status: 401 },
+      )
+    }
+
     const body = await request.json()
     const query = body?.query
     const variables = body?.variables ?? {}
     const operationName = body?.operationName
 
     if (typeof query !== 'string' || !query.trim()) {
+      routeLogger.warn('rejected', { reason: 'missing_query' })
       return NextResponse.json({ errors: [{ message: 'Missing GraphQL query' }] }, { status: 400 })
     }
 
@@ -929,20 +1000,23 @@ export async function POST(request: NextRequest) {
     const queryVariables = getQueryVariables(queryField, variables)
 
     if (!queryConfig) {
+      routeLogger.warn('rejected', { reason: 'unsupported_query', queryField })
       return NextResponse.json({ errors: [{ message: `Unsupported query field: ${queryField}` }] }, { status: 400 })
     }
 
-    const session = getSession()
+    const neo4jSession = getSession()
     try {
-      const result = await session.run(queryConfig.cypher, queryVariables)
+      const result = await neo4jSession.run(queryConfig.cypher, queryVariables)
       const data: Record<string, unknown> = {
         [queryField]: queryConfig.transform(result, queryVariables),
       }
+      routeLogger.done('completed', { queryField })
       return NextResponse.json({ data })
     } finally {
-      await session.close()
+      await neo4jSession.close()
     }
   } catch (error) {
+    routeLogger.error('failed', error)
     return NextResponse.json(
       { errors: [{ message: error instanceof Error ? error.message : 'Unknown GraphQL error' }] },
       { status: 500 },

@@ -1,11 +1,15 @@
 'use client'
 
 import React, { Suspense, useCallback, useEffect, useRef, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Badge } from '@/components/shared/badge'
 import { Button } from '@/components/shared/button'
 import { Card } from '@/components/shared/card'
+import {
+  DataFreshnessBanner,
+  type DataFreshnessSummary,
+} from '@/components/shared/data-freshness-banner'
 import { EmptyState } from '@/components/shared/empty-state'
 import { LoadingSpinner } from '@/components/shared/loading-spinner'
 import { GraphCanvas } from '@/components/graph/graph-canvas'
@@ -73,6 +77,7 @@ async function queryGraphQL(query: string, variables?: Record<string, unknown>) 
 }
 
 function GraphExplorerPageContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [network, setNetwork] = useState<NetworkResult | null>(null)
   const [loading, setLoading] = useState(false)
@@ -88,6 +93,7 @@ function GraphExplorerPageContent() {
   const [selectedSkill, setSelectedSkill] = useState('')
   const [departments, setDepartments] = useState<MetricOption[]>([])
   const [skills, setSkills] = useState<MetricOption[]>([])
+  const [freshnessSummary, setFreshnessSummary] = useState<DataFreshnessSummary | null>(null)
   const [activeGraphMode, setActiveGraphMode] = useState<ActiveGraphMode>('enterprise')
   const [isGraphFullscreen, setIsGraphFullscreen] = useState(false)
   const [detailEmployeeId, setDetailEmployeeId] = useState<string | null>(null)
@@ -257,7 +263,7 @@ function GraphExplorerPageContent() {
   useEffect(() => {
     async function bootstrap() {
       try {
-        const [statsData, skillsData, enterpriseData] = await Promise.all([
+        const [statsData, skillsData, enterpriseData, freshnessData] = await Promise.all([
           queryGraphQL(`
             query GraphFilterDepartments {
               getDashboardStats {
@@ -282,6 +288,21 @@ function GraphExplorerPageContent() {
               }
             }
           `),
+          queryGraphQL(`
+            query GetDataFreshnessSummary {
+              getDataFreshnessSummary {
+                employeeCount
+                employeesWithImportMetadata
+                totalImportBatches
+                latestBatchId
+                latestImportSource
+                latestImportedAt
+                latestWarningCount
+                latestRowsToCreate
+                latestRowsToUpdate
+              }
+            }
+          `),
         ])
 
         setDepartments(
@@ -302,6 +323,7 @@ function GraphExplorerPageContent() {
         setSelectedNode(null)
         setHoveredNodeId(null)
         setActiveGraphMode('enterprise')
+        setFreshnessSummary(freshnessData.getDataFreshnessSummary || null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to initialize graph explorer')
       } finally {
@@ -778,6 +800,9 @@ function GraphExplorerPageContent() {
 
   return (
     <>
+      <div className="px-6 pb-6">
+        <DataFreshnessBanner summary={freshnessSummary} contextLabel="Graph exploration" />
+      </div>
       <div className="grid gap-6 px-6 xl:grid-cols-[340px_minmax(0,1fr)_340px]">
         <div className="space-y-6">
           <Card>
@@ -833,7 +858,11 @@ function GraphExplorerPageContent() {
               <p className="section-label">Enterprise Map</p>
               <div className="mt-4 space-y-3">
                 <div className="rounded-[24px] border border-[color:var(--border)] bg-white/80 px-4 py-4">
-                  <p className="text-sm font-medium text-ink-900">All 200 employees in one view</p>
+                  <p className="text-sm font-medium text-ink-900">
+                    {freshnessSummary?.employeeCount
+                      ? `All ${freshnessSummary.employeeCount} employees in one view`
+                      : 'All employees in one view'}
+                  </p>
                   <p className="mt-2 text-sm leading-6 text-ink-500">
                     This mode keeps the whole workforce visible, groups people around department anchors, and surfaces the most connected skills across the company.
                   </p>
@@ -1045,6 +1074,98 @@ function GraphExplorerPageContent() {
             />
           ) : (
             <>
+              <Card>
+                <p className="section-label">Connection Insight</p>
+                {focusNode ? (
+                  <div className="mt-4 space-y-5">
+                    <div>
+                      <div className="mb-3 flex flex-wrap gap-2">
+                        <Badge color={focusKind === 'employee' ? 'blue' : focusKind === 'skill' ? 'green' : focusKind === 'department' ? 'yellow' : 'gray'}>
+                          {focusKind === 'employee' ? 'Employee' : focusKind === 'skill' ? 'Skill' : focusKind === 'department' ? 'Department' : 'Entity'}
+                        </Badge>
+                        {focusNode.id === activeVisualNetwork?.center?.id && <Badge color="gray">Center node</Badge>}
+                      </div>
+                      <h3 className="font-display text-2xl font-semibold text-ink-900">{getNodeLabel(focusNode)}</h3>
+                      {typeof focusNode.properties.title === 'string' && (
+                        <p className="mt-1 text-sm text-ink-500">{focusNode.properties.title}</p>
+                      )}
+                    </div>
+
+                    {focusKind === 'employee' && typeof focusNode.properties.employee_id === 'string' && (
+                      <Button
+                        className="w-full"
+                        onClick={() => { router.push(`/employee/${focusNode.properties.employee_id}`) }}
+                      >
+                        Open employee profile
+                      </Button>
+                    )}
+                  </div>
+                ) : (
+                  <div className="mt-4 rounded-[24px] border border-dashed border-[color:var(--border)] bg-white/65 px-5 py-6 text-sm leading-6 text-ink-500">
+                    Select a node to inspect the surrounding workforce context.
+                  </div>
+                )}
+              </Card>
+
+              {focusNode && (
+                <Card>
+                  <p className="section-label">Node Details</p>
+                  <div className="mt-4 space-y-3">
+                    {Object.entries(focusNode.properties).map(([key, value]) => {
+                      if (!value || key === 'name' || key === 'title') return null
+
+                      return (
+                        <div
+                          key={key}
+                          className="w-full min-w-0 overflow-hidden rounded-2xl border border-[color:var(--border)] bg-white/75 px-4 py-3"
+                        >
+                          <div className="text-xs uppercase tracking-[0.14em] text-ink-400">
+                            {key.replace(/_/g, ' ')}
+                          </div>
+                          <div className="mt-1 min-w-0 break-words text-sm leading-6 text-ink-900 [overflow-wrap:anywhere]">
+                            {String(value)}
+                          </div>
+                        </div>
+                      )
+                    })}
+                  </div>
+                </Card>
+              )}
+
+              <Card>
+                <p className="section-label">Connected Nodes</p>
+                <div className="mt-4 space-y-3">
+                  {connectedNodes.length > 0 ? (
+                    connectedNodes.slice(0, 8).map((node) => (
+                      <button
+                        key={node.id}
+                        type="button"
+                        onClick={() => selectGraphNode(node)}
+                        className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-left transition-all hover:border-primary-200 hover:bg-primary-50"
+                      >
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="min-w-0">
+                            <div className="truncate font-medium text-ink-900">{getNodeLabel(node)}</div>
+                            <div className="mt-1 text-sm text-ink-500">
+                              {getNodeKind(node) === 'employee'
+                                ? (node.properties.department as string) || 'Employee'
+                                : getNodeKind(node) === 'department'
+                                  ? 'Department'
+                                  : getNodeKind(node)}
+                            </div>
+                          </div>
+                          <Badge color={getNodeKind(node) === 'employee' ? 'blue' : getNodeKind(node) === 'skill' ? 'green' : getNodeKind(node) === 'department' ? 'yellow' : 'gray'}>
+                            {getNodeKind(node)}
+                          </Badge>
+                        </div>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="text-sm text-ink-500">Focused nodes will reveal adjacent people and skill links here.</p>
+                  )}
+                </div>
+              </Card>
+
               {viewMode === 'enterprise' && (
                 <Card>
                   <p className="section-label">Enterprise Overview</p>
@@ -1088,86 +1209,6 @@ function GraphExplorerPageContent() {
                   </div>
                 </Card>
               )}
-
-              <Card>
-                <p className="section-label">Connection Insight</p>
-                {focusNode ? (
-                  <div className="mt-4 space-y-5">
-                    <div>
-                      <div className="mb-3 flex flex-wrap gap-2">
-                        <Badge color={focusKind === 'employee' ? 'blue' : focusKind === 'skill' ? 'green' : focusKind === 'department' ? 'yellow' : 'gray'}>
-                          {focusKind === 'employee' ? 'Employee' : focusKind === 'skill' ? 'Skill' : focusKind === 'department' ? 'Department' : 'Entity'}
-                        </Badge>
-                        {focusNode.id === activeVisualNetwork?.center?.id && <Badge color="gray">Center node</Badge>}
-                      </div>
-                      <h3 className="font-display text-2xl font-semibold text-ink-900">{getNodeLabel(focusNode)}</h3>
-                      {typeof focusNode.properties.title === 'string' && (
-                        <p className="mt-1 text-sm text-ink-500">{focusNode.properties.title}</p>
-                      )}
-                    </div>
-
-                    <div className="grid gap-3">
-                      {Object.entries(focusNode.properties).map(([key, value]) => {
-                        if (!value || key === 'name' || key === 'title') return null
-
-                        return (
-                          <div key={key} className="rounded-2xl border border-[color:var(--border)] bg-white/75 px-4 py-3">
-                            <div className="text-xs uppercase tracking-[0.14em] text-ink-400">
-                              {key.replace(/_/g, ' ')}
-                            </div>
-                            <div className="mt-1 text-sm text-ink-900">{String(value)}</div>
-                          </div>
-                        )
-                      })}
-                    </div>
-
-                    {focusKind === 'employee' && typeof focusNode.properties.employee_id === 'string' && (
-                      <Button
-                        className="w-full"
-                        onClick={() => { window.location.href = `/employee/${focusNode.properties.employee_id}` }}
-                      >
-                        Open employee profile
-                      </Button>
-                    )}
-                  </div>
-                ) : (
-                  <p className="mt-4 text-sm text-ink-500">Select a node to inspect the surrounding workforce context.</p>
-                )}
-              </Card>
-
-              <Card>
-                <p className="section-label">Connected Nodes</p>
-                <div className="mt-4 space-y-3">
-                  {connectedNodes.length > 0 ? (
-                    connectedNodes.slice(0, 8).map((node) => (
-                      <button
-                        key={node.id}
-                        type="button"
-                        onClick={() => selectGraphNode(node)}
-                        className="w-full rounded-2xl border border-[color:var(--border)] bg-white/80 px-4 py-3 text-left transition-all hover:border-primary-200 hover:bg-primary-50"
-                      >
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="min-w-0">
-                            <div className="truncate font-medium text-ink-900">{getNodeLabel(node)}</div>
-                            <div className="mt-1 text-sm text-ink-500">
-                              {getNodeKind(node) === 'employee'
-                                ? (node.properties.department as string) || 'Employee'
-                                : getNodeKind(node) === 'department'
-                                  ? 'Department'
-                                  : getNodeKind(node)}
-                            </div>
-                          </div>
-                          <Badge color={getNodeKind(node) === 'employee' ? 'blue' : getNodeKind(node) === 'skill' ? 'green' : getNodeKind(node) === 'department' ? 'yellow' : 'gray'}>
-                            {getNodeKind(node)}
-                          </Badge>
-                        </div>
-                      </button>
-                    ))
-                  ) : (
-                    <p className="text-sm text-ink-500">Focused nodes will reveal adjacent people and skill links here.</p>
-                  )}
-                </div>
-              </Card>
             </>
           )}
 

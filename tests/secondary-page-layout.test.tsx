@@ -1,5 +1,5 @@
 import React, { type ReactNode } from 'react'
-import { render, screen } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import SkillsPage from '@/app/skills/page'
 import AdminImportPage from '@/app/admin/import/page'
@@ -7,6 +7,10 @@ import AdminImportPage from '@/app/admin/import/page'
 vi.mock('next/navigation', () => ({
   useSearchParams: () => ({
     get: () => null,
+  }),
+  useRouter: () => ({
+    push: vi.fn(),
+    refresh: vi.fn(),
   }),
 }))
 
@@ -118,15 +122,31 @@ describe('Secondary page layout rails', () => {
     mockFetch.mockReset()
   })
 
-  it('keeps the import page intro and workspace on the same padded content rail', () => {
+  it('keeps the import page intro and workspace on the same padded content rail', async () => {
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        imports: [],
+      }),
+    })
+
+    vi.stubGlobal('fetch', mockFetch)
+
     const { container } = render(<AdminImportPage />)
 
     expect(screen.getByText('Import Employees')).toBeInTheDocument()
+
+    await waitFor(() => {
+      expect(mockFetch).toHaveBeenCalled()
+    })
 
     const rail = container.querySelector('.space-y-6.px-6')
     const workspaceGrid = container.querySelector('.grid.gap-6.lg\\:grid-cols-\\[minmax\\(0\\,1\\.7fr\\)_minmax\\(320px\\,0\\.8fr\\)\\]')
 
     expect(rail).toBeTruthy()
     expect(workspaceGrid).toBeTruthy()
+
+    vi.unstubAllGlobals()
+    mockFetch.mockReset()
   })
 })

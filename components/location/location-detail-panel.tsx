@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/shared/badge'
 import { Card } from '@/components/shared/card'
 import { EmptyState } from '@/components/shared/empty-state'
@@ -21,6 +22,8 @@ interface LocationDetail {
     title: string
     department: string
     location: string
+    lastImportedAt?: string
+    lastImportSource?: string
   }>
 }
 
@@ -37,6 +40,7 @@ export function LocationDetailPanel({
   error,
   footprint,
 }: LocationDetailPanelProps) {
+  const router = useRouter()
   const topCities = [...footprint].sort((left, right) => right.employeeCount - left.employeeCount).slice(0, 4)
   const totalEmployees = footprint.reduce((sum, city) => sum + city.employeeCount, 0)
 
@@ -159,13 +163,18 @@ export function LocationDetailPanel({
               <button
                 key={employee.employee_id}
                 type="button"
-                onClick={() => { window.location.href = `/employee/${employee.employee_id}` }}
+                onClick={() => router.push(`/employee/${employee.employee_id}`)}
                 className="flex w-full items-start justify-between gap-3 rounded-2xl border border-[color:var(--border)] bg-white px-4 py-3 text-left transition-all hover:border-primary-200 hover:bg-primary-50"
               >
                 <div className="min-w-0">
                   <p className="truncate font-medium text-ink-900">{employee.name}</p>
                   <p className="mt-1 truncate text-sm text-ink-500">{employee.title}</p>
                   <p className="mt-1 text-xs text-ink-400">{employee.department}</p>
+                  <p className="mt-2 text-[11px] text-ink-400">
+                    {employee.lastImportedAt
+                      ? `Imported ${new Date(employee.lastImportedAt).toLocaleDateString()}`
+                      : employee.lastImportSource || 'Import metadata unavailable'}
+                  </p>
                 </div>
                 <span className="shrink-0 text-sm font-medium text-primary-600">Open</span>
               </button>

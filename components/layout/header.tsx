@@ -4,6 +4,8 @@ import React from 'react'
 import { usePathname } from 'next/navigation'
 import { Badge } from '@/components/shared/badge'
 import { UnifiedCommandSearch } from './unified-command-search'
+import { useAuthSession } from '@/components/auth/session-provider'
+import { getRoleLabel } from '@/lib/auth/session'
 
 const pageMeta: Record<string, { title: string; subtitle: string }> = {
   '/dashboard': {
@@ -50,6 +52,7 @@ function getPageMeta(pathname: string) {
 export function Header({ sidebarCollapsed, onToggleSidebar }: HeaderProps) {
   const pathname = usePathname()
   const meta = getPageMeta(pathname)
+  const { session, status } = useAuthSession()
 
   return (
     <header className="surface-panel sticky top-0 z-30 mx-6 mt-6 rounded-[28px] px-6 py-5">
@@ -89,9 +92,13 @@ export function Header({ sidebarCollapsed, onToggleSidebar }: HeaderProps) {
           <UnifiedCommandSearch />
 
           <div className="flex flex-wrap items-center gap-2">
-            <Badge color="blue">Live Workspace</Badge>
-            <Badge color="green">Graph Ready</Badge>
-            <Badge color="gray">200 employees seeded</Badge>
+            <Badge color="blue">VPN Workspace</Badge>
+            <Badge color="green">
+              {session ? `${getRoleLabel(session.role)} Access` : status === 'loading' ? 'Resolving Access' : 'Protected Access'}
+            </Badge>
+            <Badge color="gray">
+              {session ? session.name : 'Internal Session Required'}
+            </Badge>
           </div>
         </div>
       </div>

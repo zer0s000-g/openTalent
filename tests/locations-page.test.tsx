@@ -3,6 +3,12 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import LocationsPage from '@/app/locations/page'
 
+const push = vi.fn()
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push }),
+}))
+
 vi.mock('@/components/layout/app-layout', () => ({
   AppLayout: ({ children }: { children: ReactNode }) => <div>{children}</div>,
 }))
@@ -69,9 +75,30 @@ vi.mock('@/components/shared/empty-state', () => ({
 
 const mockFetch = vi.fn()
 
+function createFreshnessResponse() {
+  return {
+    json: async () => ({
+      data: {
+        getDataFreshnessSummary: {
+          employeeCount: 120,
+          employeesWithImportMetadata: 118,
+          totalImportBatches: 4,
+          latestBatchId: 'batch-004',
+          latestImportSource: 'airnav.csv',
+          latestImportedAt: '2026-04-18T12:00:00.000Z',
+          latestWarningCount: 1,
+          latestRowsToCreate: 2,
+          latestRowsToUpdate: 8,
+        },
+      },
+    }),
+  }
+}
+
 describe('LocationsPage', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch)
+    push.mockReset()
   })
 
   afterEach(() => {
@@ -113,6 +140,7 @@ describe('LocationsPage', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           data: {
@@ -160,6 +188,8 @@ describe('LocationsPage', () => {
                   title: 'Chief Executive Officer',
                   department: 'Executive',
                   location: 'Jakarta',
+                  lastImportedAt: '2026-04-18T12:00:00.000Z',
+                  lastImportSource: 'airnav.csv',
                 },
               ],
             },
@@ -170,14 +200,16 @@ describe('LocationsPage', () => {
     render(<LocationsPage />)
 
     await screen.findByText('Indonesia Talent Footprint')
+    expect(screen.getByText(/Location coverage reflects the latest import from/i)).toBeInTheDocument()
     expect((await screen.findAllByText('Jakarta')).length).toBeGreaterThan(0)
     await screen.findByText('James Smith')
+    expect(screen.getAllByText(/Imported 4\/18\/2026/i).length).toBeGreaterThan(0)
 
     expect(screen.getAllByText('24 employees').length).toBeGreaterThan(0)
     expect(screen.getByText('City-based workforce distribution')).toBeInTheDocument()
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(5)
+      expect(mockFetch).toHaveBeenCalledTimes(6)
     })
   })
 
@@ -206,6 +238,7 @@ describe('LocationsPage', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           data: {
@@ -283,6 +316,7 @@ describe('LocationsPage', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           data: {

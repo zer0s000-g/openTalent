@@ -3,8 +3,18 @@
 import React from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
+import { useAuthSession } from '@/components/auth/session-provider'
+import { hasRequiredRole, type AppUserRole } from '@/lib/auth/session'
 
-const navigation = [
+interface NavigationItem {
+  name: string
+  href: string
+  description: string
+  requiredRole?: AppUserRole
+  icon: React.ReactNode
+}
+
+const navigation: NavigationItem[] = [
   {
     name: 'Command Center',
     href: '/dashboard',
@@ -51,6 +61,7 @@ const navigation = [
     name: 'Data Operations',
     href: '/admin/import',
     description: 'Import and manage records',
+    requiredRole: 'admin' as AppUserRole,
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="h-5 w-5">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.8" d="M12 16V4m0 12 4-4m-4 4-4-4M5 19h14" />
@@ -65,6 +76,10 @@ interface SidebarProps {
 
 export function Sidebar({ collapsed }: SidebarProps) {
   const pathname = usePathname()
+  const { session } = useAuthSession()
+  const navigationItems = navigation.filter((item) =>
+    item.requiredRole ? hasRequiredRole(session, item.requiredRole) : true,
+  )
 
   return (
     <aside
@@ -95,7 +110,7 @@ export function Sidebar({ collapsed }: SidebarProps) {
       </div>
 
       <nav className="space-y-2 px-2">
-        {navigation.map((item) => {
+        {navigationItems.map((item) => {
           const isActive = pathname === item.href || pathname?.startsWith(item.href + '/')
 
           return (
@@ -127,9 +142,9 @@ export function Sidebar({ collapsed }: SidebarProps) {
       <div className="mt-auto px-2">
         <div className="rounded-[24px] border border-white/10 bg-white/5 p-4 text-sm text-slate-300">
           <p className="section-label !text-slate-400">Workspace</p>
-          <p className="mt-3 font-medium text-white">Talent intelligence demo</p>
+          <p className="mt-3 font-medium text-white">Internal workforce workspace</p>
           <p className="mt-1 text-sm leading-6 text-slate-400">
-            Explore workforce structure, skills, and relationships with a cleaner executive-facing shell.
+            Explore workforce structure, skills, and relationships through an authenticated AirNav Indonesia workspace.
           </p>
         </div>
       </div>

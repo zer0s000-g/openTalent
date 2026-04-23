@@ -15,22 +15,53 @@ async function importCSV(filePath: string) {
 
   try {
     await driver.verifyConnectivity()
-    const report = await importEmployeesFromCsv(driver, csv)
+    const review = await importEmployeesFromCsv(driver, csv, {
+      mode: 'dry-run',
+      filename: filePath,
+    })
 
     console.log('\n' + '='.repeat(50))
-    console.log('IMPORT REPORT')
+    console.log('IMPORT REVIEW')
     console.log('='.repeat(50))
-    console.log(`Total rows:     ${report.totalRows}`)
-    console.log(`Successful:     ${report.successful}`)
-    console.log(`Failed:         ${report.failed}`)
+    console.log(`Total rows:     ${review.totalRows}`)
+    console.log(`Valid rows:     ${review.validRows}`)
+    console.log(`Invalid rows:   ${review.invalidRows}`)
+    console.log(`To create:      ${review.rowsToCreate}`)
+    console.log(`To update:      ${review.rowsToUpdate}`)
+    console.log(`Warnings:       ${review.warnings.length}`)
 
-    if (report.errors.length > 0) {
-      console.log(`\nErrors (${report.errors.length}):`)
-      report.errors.slice(0, 10).forEach((item) => {
-        console.log(`  Row ${item.row}${item.employee_id ? ` (${item.employee_id})` : ''}: ${item.error}`)
+    if (review.errors.length > 0) {
+      console.log(`\nErrors (${review.errors.length}):`)
+      review.errors.slice(0, 10).forEach((item) => {
+        console.log(`  Row ${item.row}${item.employee_id ? ` (${item.employee_id})` : ''}: ${item.message}`)
+      })
+      console.log('\nImport aborted because the preview found invalid rows.')
+      console.log('='.repeat(50))
+      process.exitCode = 1
+      return
+    }
+
+    if (review.warnings.length > 0) {
+      console.log(`\nWarnings (${review.warnings.length}):`)
+      review.warnings.slice(0, 10).forEach((item) => {
+        console.log(`  Row ${item.row}${item.employee_id ? ` (${item.employee_id})` : ''}: ${item.message}`)
       })
     }
 
+    console.log('='.repeat(50))
+
+    const report = await importEmployeesFromCsv(driver, csv, {
+      mode: 'apply',
+      filename: filePath,
+    })
+
+    console.log('\n' + '='.repeat(50))
+    console.log('IMPORT APPLY')
+    console.log('='.repeat(50))
+    console.log(`Successful:     ${report.successful}`)
+    console.log(`Failed:         ${report.failed}`)
+    console.log(`Batch ID:       ${report.batchId}`)
+    console.log(`Imported at:    ${report.importedAt}`)
     console.log('='.repeat(50))
 
     const session = driver.session({ database: env.NEO4J_DATABASE })

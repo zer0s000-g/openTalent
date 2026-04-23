@@ -7,7 +7,10 @@ const { searchParamState } = vi.hoisted(() => ({
   searchParamState: { skill: null as string | null },
 }))
 
+const push = vi.fn()
+
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push }),
   useSearchParams: () => ({
     get: (key: string) => (key === 'skill' ? searchParamState.skill : null),
   }),
@@ -59,9 +62,30 @@ vi.mock('@/components/shared/badge', () => ({
 
 const mockFetch = vi.fn()
 
+function createFreshnessResponse() {
+  return {
+    json: async () => ({
+      data: {
+        getDataFreshnessSummary: {
+          employeeCount: 120,
+          employeesWithImportMetadata: 118,
+          totalImportBatches: 4,
+          latestBatchId: 'batch-004',
+          latestImportSource: 'airnav.csv',
+          latestImportedAt: '2026-04-18T12:00:00.000Z',
+          latestWarningCount: 1,
+          latestRowsToCreate: 2,
+          latestRowsToUpdate: 8,
+        },
+      },
+    }),
+  }
+}
+
 describe('SkillsPage', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch)
+    push.mockReset()
   })
 
   afterEach(() => {
@@ -82,6 +106,7 @@ describe('SkillsPage', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           data: {
@@ -91,12 +116,16 @@ describe('SkillsPage', () => {
                 name: 'James Smith',
                 title: 'Chief Executive Officer',
                 department: 'Executive',
+                lastImportedAt: '2026-04-18T12:00:00.000Z',
+                lastImportSource: 'airnav.csv',
               },
               {
                 employee_id: 'EMP0002',
                 name: 'Mary Johnson',
                 title: 'VP Engineering',
                 department: 'Engineering',
+                lastImportedAt: '2026-04-18T12:00:00.000Z',
+                lastImportSource: 'airnav.csv',
               },
             ],
           },
@@ -106,6 +135,7 @@ describe('SkillsPage', () => {
     render(<SkillsPage />)
 
     await screen.findByText('All Skills (2)')
+    expect(screen.getByText(/Skill coverage reflects the latest import from/i)).toBeInTheDocument()
     fireEvent.click(screen.getByRole('button', { name: /decision making/i }))
 
     await screen.findByText('James Smith')
@@ -122,6 +152,7 @@ describe('SkillsPage', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           errors: [{ message: 'Expected parameter(s): limit' }],
@@ -153,6 +184,7 @@ describe('SkillsPage', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           data: {
@@ -162,6 +194,8 @@ describe('SkillsPage', () => {
                 name: 'Priya Tan',
                 title: 'Senior Data Scientist',
                 department: 'Data Science',
+                lastImportedAt: '2026-04-18T12:00:00.000Z',
+                lastImportSource: 'airnav.csv',
               },
             ],
           },

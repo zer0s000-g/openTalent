@@ -1,12 +1,16 @@
 'use client'
 
 import React, { Suspense, useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Card } from '@/components/shared/card'
 import { LoadingSpinner } from '@/components/shared/loading-spinner'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/shared/badge'
+import {
+  DataFreshnessBanner,
+  type DataFreshnessSummary,
+} from '@/components/shared/data-freshness-banner'
 
 interface SkillListItem {
   name: string
@@ -18,6 +22,8 @@ interface SkillEmployee {
   name: string
   title: string
   department: string
+  lastImportedAt?: string
+  lastImportSource?: string
 }
 
 async function queryGraphQL(query: string, variables?: Record<string, unknown>) {
@@ -36,10 +42,12 @@ async function queryGraphQL(query: string, variables?: Record<string, unknown>) 
 }
 
 function SkillsPageContent() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const [skills, setSkills] = useState<SkillListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [freshnessSummary, setFreshnessSummary] = useState<DataFreshnessSummary | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null)
   const [skillEmployeesByName, setSkillEmployeesByName] = useState<Record<string, SkillEmployee[]>>({})
@@ -49,16 +57,33 @@ function SkillsPageContent() {
   useEffect(() => {
     async function fetchSkills() {
       try {
-        const data = await queryGraphQL(`
-          query GetSkills {
-            skills {
-              name
-              employeeCount
+        const [skillsData, freshnessData] = await Promise.all([
+          queryGraphQL(`
+            query GetSkills {
+              skills {
+                name
+                employeeCount
+              }
             }
-          }
-        `)
+          `),
+          queryGraphQL(`
+            query GetDataFreshnessSummary {
+              getDataFreshnessSummary {
+                employeeCount
+                employeesWithImportMetadata
+                totalImportBatches
+                latestBatchId
+                latestImportSource
+                latestImportedAt
+                latestWarningCount
+                latestRowsToCreate
+                latestRowsToUpdate
+              }
+            }
+          `),
+        ])
 
-        const skillList = (data.skills || [])
+        const skillList = (skillsData.skills || [])
           .filter((skill: { name?: string }) => Boolean(skill.name))
           .map((skill: { name: string; employeeCount: number }) => ({
             name: skill.name,
@@ -67,6 +92,7 @@ function SkillsPageContent() {
           .sort((left: SkillListItem, right: SkillListItem) => right.employeeCount - left.employeeCount)
 
         setSkills(skillList)
+        setFreshnessSummary(freshnessData.getDataFreshnessSummary || null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load skills')
       } finally {
@@ -90,6 +116,8 @@ function SkillsPageContent() {
               name
               title
               department
+              lastImportedAt
+              lastImportSource
             }
           }
         `,
@@ -177,6 +205,8 @@ function SkillsPageContent() {
           </p>
         </section>
 
+        <DataFreshnessBanner summary={freshnessSummary} contextLabel="Skill coverage" />
+
         <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
           <div className="space-y-4">
             <Card title="Search Skills">
@@ -233,12 +263,17 @@ function SkillsPageContent() {
                       <button
                         key={employee.employee_id}
                         type="button"
-                        onClick={() => { window.location.href = `/employee/${employee.employee_id}` }}
+                        onClick={() => router.push(`/employee/${employee.employee_id}`)}
                         className="rounded-lg border border-gray-200 p-4 text-left transition-colors hover:bg-gray-50"
                       >
                         <p className="truncate font-medium text-gray-900">{employee.name}</p>
                         <p className="truncate text-sm text-gray-500">{employee.title}</p>
                         <p className="mt-1 text-xs text-gray-400">{employee.department}</p>
+                        <p className="mt-2 text-[11px] text-gray-400">
+                          {employee.lastImportedAt
+                            ? `Imported ${new Date(employee.lastImportedAt).toLocaleDateString()}`
+                            : employee.lastImportSource || 'Import metadata unavailable'}
+                        </p>
                       </button>
                     ))}
                   </div>

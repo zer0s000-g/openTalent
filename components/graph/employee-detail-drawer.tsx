@@ -1,6 +1,7 @@
 'use client'
 
 import type { ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { Badge } from '@/components/shared/badge'
 import { Button } from '@/components/shared/button'
 import { LoadingSpinner } from '@/components/shared/loading-spinner'
@@ -96,6 +97,8 @@ export function EmployeeDetailDrawer({
   error,
   onClose,
 }: EmployeeDetailDrawerProps) {
+  const router = useRouter()
+
   return (
     <aside className="surface-panel flex h-full min-h-0 flex-col overflow-hidden rounded-[30px] border border-white/70 bg-[linear-gradient(180deg,rgba(255,255,255,0.95)_0%,rgba(244,247,252,0.94)_100%)] shadow-[0_24px_70px_rgba(15,23,42,0.12)]">
       <div className="sticky top-0 z-10 border-b border-[color:var(--border)] bg-white/90 px-6 py-5 backdrop-blur">
@@ -199,7 +202,7 @@ export function EmployeeDetailDrawer({
                 <Button
                   variant="secondary"
                   className="w-full"
-                  onClick={() => { window.location.href = `/employee/${employee.employee_id}` }}
+                  onClick={() => { router.push(`/employee/${employee.employee_id}`) }}
                 >
                   Open full employee profile
                 </Button>

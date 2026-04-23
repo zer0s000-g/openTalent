@@ -7,6 +7,10 @@ import { Button } from '@/components/shared/button'
 import { Badge } from '@/components/shared/badge'
 import { EmptyState } from '@/components/shared/empty-state'
 import { LoadingSpinner } from '@/components/shared/loading-spinner'
+import {
+  DataFreshnessBanner,
+  type DataFreshnessSummary,
+} from '@/components/shared/data-freshness-banner'
 import { IndonesiaFootprintMap, type FootprintCity } from '@/components/location/indonesia-footprint-map'
 import { LocationDetailPanel } from '@/components/location/location-detail-panel'
 import { summarizeFootprint } from '@/lib/location-footprint'
@@ -31,6 +35,8 @@ interface LocationDetail {
     title: string
     department: string
     location: string
+    lastImportedAt?: string
+    lastImportSource?: string
   }>
 }
 
@@ -65,6 +71,7 @@ export default function LocationsPage() {
   const [loadingDetail, setLoadingDetail] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [detailError, setDetailError] = useState<string | null>(null)
+  const [freshnessSummary, setFreshnessSummary] = useState<DataFreshnessSummary | null>(null)
   const footprintRequestIdRef = useRef(0)
   const detailRequestIdRef = useRef(0)
 
@@ -80,7 +87,7 @@ export default function LocationsPage() {
   useEffect(() => {
     async function bootstrap() {
       try {
-        const [skillsData, statsData, rolesData] = await Promise.all([
+        const [skillsData, statsData, rolesData, freshnessData] = await Promise.all([
           queryGraphQL(`
             query GetSkills {
               skills {
@@ -104,6 +111,21 @@ export default function LocationsPage() {
               }
             }
           `),
+          queryGraphQL(`
+            query GetDataFreshnessSummary {
+              getDataFreshnessSummary {
+                employeeCount
+                employeesWithImportMetadata
+                totalImportBatches
+                latestBatchId
+                latestImportSource
+                latestImportedAt
+                latestWarningCount
+                latestRowsToCreate
+                latestRowsToUpdate
+              }
+            }
+          `),
         ])
 
         setSkills((skillsData.skills || []).map((skill: any) => ({
@@ -118,6 +140,7 @@ export default function LocationsPage() {
           name: role.name,
           count: Number(role.count || 0),
         })))
+        setFreshnessSummary(freshnessData.getDataFreshnessSummary || null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to initialize Indonesia footprint')
       } finally {
@@ -213,6 +236,8 @@ export default function LocationsPage() {
                   title
                   department
                   location
+                  lastImportedAt
+                  lastImportSource
                 }
               }
             }
@@ -397,6 +422,8 @@ export default function LocationsPage() {
             Explore how employees, roles, and skills are distributed across Indonesian cities, then drill into each city to inspect talent concentration.
           </p>
         </section>
+
+        <DataFreshnessBanner summary={freshnessSummary} contextLabel="Location coverage" />
 
         <div className="grid gap-6 xl:grid-cols-[320px_minmax(0,1fr)_360px]">
           <div className="space-y-4">

@@ -12,7 +12,10 @@ const { graphSearchParamState } = vi.hoisted(() => ({
   },
 }))
 
+const push = vi.fn()
+
 vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push }),
   useSearchParams: () => ({
     get: (key: string) => {
       if (key === 'mode') return graphSearchParamState.mode
@@ -105,9 +108,30 @@ vi.mock('@/components/graph/skill-insight-panel', () => ({
 
 const mockFetch = vi.fn()
 
+function createFreshnessResponse() {
+  return {
+    json: async () => ({
+      data: {
+        getDataFreshnessSummary: {
+          employeeCount: 120,
+          employeesWithImportMetadata: 118,
+          totalImportBatches: 4,
+          latestBatchId: 'batch-004',
+          latestImportSource: 'airnav.csv',
+          latestImportedAt: '2026-04-18T12:00:00.000Z',
+          latestWarningCount: 1,
+          latestRowsToCreate: 2,
+          latestRowsToUpdate: 8,
+        },
+      },
+    }),
+  }
+}
+
 describe('GraphExplorerPage skill flow', () => {
   beforeEach(() => {
     vi.stubGlobal('fetch', mockFetch)
+    push.mockReset()
   })
 
   afterEach(() => {
@@ -183,11 +207,13 @@ describe('GraphExplorerPage skill flow', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
 
     render(<GraphExplorerPage />)
 
     await screen.findByText('Enterprise Map')
-    await screen.findByText('All 200 employees in one view')
+    expect(screen.getByText(/Graph exploration reflects the latest import from/i)).toBeInTheDocument()
+    await screen.findByText('All 120 employees in one view')
     await screen.findByText('Live workforce map')
 
     expect(screen.getByText('Employees')).toBeInTheDocument()
@@ -195,7 +221,7 @@ describe('GraphExplorerPage skill flow', () => {
     expect(screen.getByText('Shared skills')).toBeInTheDocument()
     expect(screen.getByText('Reporting links')).toBeInTheDocument()
     expect(screen.getByText('Top shared skills')).toBeInTheDocument()
-    expect(screen.getByText('2')).toBeInTheDocument()
+    expect(screen.getAllByText('2').length).toBeGreaterThan(0)
     expect(screen.getAllByText('1').length).toBeGreaterThan(0)
   })
 
@@ -241,6 +267,7 @@ describe('GraphExplorerPage skill flow', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
 
     render(<GraphExplorerPage />)
 
@@ -309,6 +336,7 @@ describe('GraphExplorerPage skill flow', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           data: {
@@ -383,13 +411,13 @@ describe('GraphExplorerPage skill flow', () => {
     fireEvent.click(screen.getByRole('button', { name: /load department network/i }))
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(4)
+      expect(mockFetch).toHaveBeenCalledTimes(5)
     })
 
     fireEvent.click(screen.getByRole('button', { name: /enterprise see the full workforce map/i }))
 
     await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledTimes(5)
+      expect(mockFetch).toHaveBeenCalledTimes(6)
     })
 
     const lastCall = mockFetch.mock.calls.at(-1)
@@ -437,6 +465,7 @@ describe('GraphExplorerPage skill flow', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
       .mockResolvedValueOnce({
         json: async () => ({
           data: {
@@ -470,7 +499,7 @@ describe('GraphExplorerPage skill flow', () => {
 
     await screen.findByText('Engineering')
 
-    expect(mockFetch).toHaveBeenCalledTimes(4)
+    expect(mockFetch).toHaveBeenCalledTimes(5)
     expect(String(mockFetch.mock.calls.at(-1)?.[1]?.body)).toContain('getDepartmentSubgraph')
   })
 
@@ -513,6 +542,7 @@ describe('GraphExplorerPage skill flow', () => {
           },
         }),
       })
+      .mockResolvedValueOnce(createFreshnessResponse())
 
     render(<GraphExplorerPage />)
 

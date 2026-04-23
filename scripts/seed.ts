@@ -6,32 +6,31 @@ import { indonesiaCities } from '@/lib/indonesia-cities'
 dotenv.config({ path: '.env.local' })
 
 /**
- * Seed script - populates the database with 200 employees and complete profile details
+ * Seed script - populates the database with 500 employees and complete profile details
  * Run with: npm run seed
  */
 
+const TARGET_EMPLOYEE_COUNT = 500
+const SAMPLE_EMAIL_DOMAIN = 'sample.airnav.local'
+
 const firstNames = [
-  'James', 'Mary', 'John', 'Patricia', 'Robert', 'Jennifer', 'Michael', 'Linda',
-  'William', 'Elizabeth', 'David', 'Barbara', 'Richard', 'Susan', 'Joseph', 'Jessica',
-  'Thomas', 'Sarah', 'Charles', 'Karen', 'Christopher', 'Nancy', 'Daniel', 'Lisa',
-  'Matthew', 'Betty', 'Anthony', 'Margaret', 'Mark', 'Sandra', 'Donald', 'Ashley',
-  'Steven', 'Kimberly', 'Paul', 'Emily', 'Andrew', 'Donna', 'Joshua', 'Michelle',
-  'Kenneth', 'Dorothy', 'Kevin', 'Carol', 'Brian', 'Amanda', 'George', 'Melissa',
-  'Edward', 'Deborah', 'Ronald', 'Stephanie', 'Timothy', 'Rebecca', 'Jason', 'Sharon',
-  'Jeffrey', 'Laura', 'Ryan', 'Cynthia', 'Jacob', 'Kathleen', 'Gary', 'Amy',
-  'Nicholas', 'Angela', 'Eric', 'Shirley', 'Jonathan', 'Anna', 'Stephen', 'Brenda',
-  'Avery', 'Jordan', 'Taylor', 'Morgan', 'Parker', 'Reese', 'Quinn', 'Skyler',
+  'Aditya', 'Agus', 'Ahmad', 'Aldo', 'Andhika', 'Andini', 'Anisa', 'Arif', 'Ariq', 'Arya',
+  'Aulia', 'Ayu', 'Bagas', 'Bayu', 'Bella', 'Bima', 'Cahya', 'Citra', 'Dewi', 'Dian',
+  'Dimas', 'Dinda', 'Eka', 'Elsa', 'Farah', 'Farhan', 'Fajar', 'Fikri', 'Fitri', 'Galih',
+  'Gilang', 'Hana', 'Hanif', 'Indah', 'Intan', 'Iqbal', 'Jihan', 'Kartika', 'Kevin', 'Laras',
+  'Luthfi', 'Maya', 'Mega', 'Nabila', 'Nadya', 'Naufal', 'Nia', 'Nisa', 'Pramudya', 'Putri',
+  'Rafi', 'Rani', 'Reza', 'Rizky', 'Salsabila', 'Sekar', 'Shabrina', 'Sinta', 'Tasya', 'Tiara',
+  'Vania', 'Wahyu', 'Winda', 'Yogi', 'Yolanda', 'Yudha', 'Yuni', 'Zahra',
 ]
 
 const lastNames = [
-  'Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Garcia', 'Miller', 'Davis',
-  'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson',
-  'Thomas', 'Taylor', 'Moore', 'Jackson', 'Martin', 'Lee', 'Perez', 'Thompson',
-  'White', 'Harris', 'Sanchez', 'Clark', 'Ramirez', 'Lewis', 'Robinson', 'Walker',
-  'Young', 'Allen', 'King', 'Wright', 'Scott', 'Torres', 'Nguyen', 'Hill', 'Flores',
-  'Green', 'Adams', 'Nelson', 'Baker', 'Hall', 'Rivera', 'Campbell', 'Mitchell',
-  'Carter', 'Roberts', 'Morgan', 'Reed', 'Brooks', 'Kelly', 'Murphy', 'Ward',
-  'Watson', 'Price', 'Bennett', 'Russell', 'Sanders', 'Perry', 'Powell', 'Long',
+  'Adinata', 'Anggraini', 'Anugrah', 'Darmawan', 'Firdaus', 'Firmansyah', 'Gunawan', 'Halim',
+  'Hamzah', 'Handayani', 'Hapsari', 'Hardianto', 'Hartono', 'Hidayat', 'Iskandar', 'Kurniawan',
+  'Kusuma', 'Lesmana', 'Lestari', 'Mahendra', 'Maharani', 'Maulana', 'Mulyani', 'Nugraha',
+  'Nugroho', 'Pamungkas', 'Permana', 'Permata', 'Pertiwi', 'Pradana', 'Prakoso', 'Prasetya',
+  'Pratama', 'Purnama', 'Putra', 'Ramadhan', 'Santoso', 'Saputra', 'Sari', 'Setiawan',
+  'Siregar', 'Suhendra', 'Syahputra', 'Utami', 'Wijaya', 'Wibowo', 'Wicaksono', 'Wulandari',
+  'Yuliani', 'Zulkarnain',
 ]
 
 const softSkills = [
@@ -62,7 +61,7 @@ const departmentConfigs = [
   },
   {
     name: 'Engineering',
-    size: 36,
+    size: 95,
     costCenter: 'CC-200',
     headTitle: 'VP Engineering',
     directorTitle: 'Principal Engineer',
@@ -74,7 +73,7 @@ const departmentConfigs = [
   },
   {
     name: 'Product',
-    size: 15,
+    size: 38,
     costCenter: 'CC-210',
     headTitle: 'VP Product',
     directorTitle: 'Director of Product',
@@ -86,7 +85,7 @@ const departmentConfigs = [
   },
   {
     name: 'Design',
-    size: 12,
+    size: 30,
     costCenter: 'CC-220',
     headTitle: 'Head of Design',
     directorTitle: 'Design Manager',
@@ -98,7 +97,7 @@ const departmentConfigs = [
   },
   {
     name: 'Data Science',
-    size: 14,
+    size: 35,
     costCenter: 'CC-230',
     headTitle: 'Head of Data',
     directorTitle: 'Senior DS',
@@ -110,7 +109,7 @@ const departmentConfigs = [
   },
   {
     name: 'Marketing',
-    size: 10,
+    size: 25,
     costCenter: 'CC-240',
     headTitle: 'CMO',
     directorTitle: 'Growth Manager',
@@ -122,7 +121,7 @@ const departmentConfigs = [
   },
   {
     name: 'Sales',
-    size: 20,
+    size: 50,
     costCenter: 'CC-250',
     headTitle: 'VP Sales',
     directorTitle: 'Sales Manager',
@@ -134,7 +133,7 @@ const departmentConfigs = [
   },
   {
     name: 'HR',
-    size: 8,
+    size: 20,
     costCenter: 'CC-260',
     headTitle: 'Head of People',
     directorTitle: 'Talent Partner',
@@ -146,7 +145,7 @@ const departmentConfigs = [
   },
   {
     name: 'Finance',
-    size: 8,
+    size: 20,
     costCenter: 'CC-270',
     headTitle: 'CFO',
     directorTitle: 'Controller',
@@ -158,7 +157,7 @@ const departmentConfigs = [
   },
   {
     name: 'Legal',
-    size: 6,
+    size: 15,
     costCenter: 'CC-280',
     headTitle: 'General Counsel',
     directorTitle: 'Senior Counsel',
@@ -170,7 +169,7 @@ const departmentConfigs = [
   },
   {
     name: 'Operations',
-    size: 16,
+    size: 40,
     costCenter: 'CC-290',
     headTitle: 'COO',
     directorTitle: 'Director of Operations',
@@ -182,7 +181,7 @@ const departmentConfigs = [
   },
   {
     name: 'Customer Success',
-    size: 20,
+    size: 50,
     costCenter: 'CC-300',
     headTitle: 'VP Customer Success',
     directorTitle: 'CS Manager',
@@ -194,7 +193,7 @@ const departmentConfigs = [
   },
   {
     name: 'Security',
-    size: 10,
+    size: 25,
     costCenter: 'CC-310',
     headTitle: 'CISO',
     directorTitle: 'Security Manager',
@@ -206,7 +205,7 @@ const departmentConfigs = [
   },
   {
     name: 'IT',
-    size: 9,
+    size: 22,
     costCenter: 'CC-320',
     headTitle: 'Director of IT',
     directorTitle: 'Director of IT',
@@ -218,7 +217,7 @@ const departmentConfigs = [
   },
   {
     name: 'Research',
-    size: 15,
+    size: 34,
     costCenter: 'CC-330',
     headTitle: 'Research Manager',
     directorTitle: 'Senior Researcher',
@@ -243,18 +242,18 @@ const certificationCatalog = {
 } as const
 
 const educationCatalog = [
-  { institution: 'Stanford University', degree: 'BS', field: 'Computer Science' },
-  { institution: 'MIT', degree: 'BS', field: 'Electrical Engineering' },
-  { institution: 'UC Berkeley', degree: 'BS', field: 'Business Administration' },
-  { institution: 'Carnegie Mellon University', degree: 'MS', field: 'Computer Science' },
-  { institution: 'Harvard University', degree: 'MBA', field: 'Business' },
-  { institution: 'University of Washington', degree: 'BS', field: 'Computer Science' },
-  { institution: 'Georgia Tech', degree: 'MS', field: 'Data Science' },
-  { institution: 'University of Texas', degree: 'BBA', field: 'Finance' },
-  { institution: 'Cornell University', degree: 'BS', field: 'Engineering' },
-  { institution: 'UCLA', degree: 'BA', field: 'Psychology' },
-  { institution: 'Northwestern University', degree: 'MS', field: 'Product Design' },
-  { institution: 'University of Michigan', degree: 'BA', field: 'Economics' },
+  { institution: 'Universitas Indonesia', degree: 'S.Kom.', field: 'Ilmu Komputer' },
+  { institution: 'Institut Teknologi Bandung', degree: 'S.T.', field: 'Teknik Informatika' },
+  { institution: 'Universitas Gadjah Mada', degree: 'S.E.', field: 'Manajemen' },
+  { institution: 'Institut Teknologi Sepuluh Nopember', degree: 'M.T.', field: 'Sains Data' },
+  { institution: 'Universitas Airlangga', degree: 'S.E.', field: 'Ekonomi' },
+  { institution: 'IPB University', degree: 'S.Stat.', field: 'Statistika' },
+  { institution: 'Binus University', degree: 'S.Kom.', field: 'Sistem Informasi' },
+  { institution: 'Telkom University', degree: 'S.T.', field: 'Teknik Industri' },
+  { institution: 'Universitas Padjadjaran', degree: 'S.H.', field: 'Ilmu Hukum' },
+  { institution: 'Universitas Diponegoro', degree: 'S.Psi.', field: 'Psikologi' },
+  { institution: 'Universitas Hasanuddin', degree: 'S.T.', field: 'Teknik Elektro' },
+  { institution: 'Universitas Brawijaya', degree: 'MBA', field: 'Administrasi Bisnis' },
 ] as const
 
 const aspirationTypes = ['Role Change', 'Department Transfer', 'Skill Development', 'Leadership Track', 'Geographic Move'] as const
@@ -365,7 +364,7 @@ function createUniqueName(index: number) {
 
 function createEmail(name: string, employeeId: string) {
   const slug = name.toLowerCase().replace(/[^a-z]+/g, '.').replace(/^\.+|\.+$/g, '')
-  return `${slug}.${employeeId.toLowerCase()}@company.com`
+  return `${slug}.${employeeId.toLowerCase()}@${SAMPLE_EMAIL_DOMAIN}`
 }
 
 function createHiredDate(level: string, rand: () => number) {
@@ -588,7 +587,7 @@ async function seed() {
     await session.run('MATCH (n) DETACH DELETE n')
     console.log('Database cleared')
 
-    const employees = generateEmployees(200)
+    const employees = generateEmployees(TARGET_EMPLOYEE_COUNT)
     console.log(`Generated ${employees.length} fully populated employees`)
 
     console.log('Creating departments...')
