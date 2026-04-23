@@ -1,127 +1,88 @@
 import { describe, it, expect } from 'vitest'
-
-// Test graph payload shaping
-interface GraphNode {
-  id: string
-  labels: string[]
-  properties: Record<string, string>
-}
-
-interface GraphRelationship {
-  start: { id: string }
-  end: { id: string }
-  type: string
-}
-
-interface NetworkResult {
-  center?: GraphNode
-  nodes: GraphNode[]
-  relationships: GraphRelationship[]
-}
-
-function shapeNetworkPayload(rawData: any): NetworkResult {
-  if (!rawData) {
-    return { center: undefined, nodes: [], relationships: [] }
-  }
-
-  return {
-    center: rawData.center ? {
-      id: rawData.center.id,
-      labels: rawData.center.labels || ['Employee'],
-      properties: rawData.center.properties || {},
-    } : undefined,
-    nodes: (rawData.nodes || []).map((n: any) => ({
-      id: n.id,
-      labels: n.labels || ['Employee'],
-      properties: n.properties || {},
-    })),
-    relationships: (rawData.relationships || []).map((r: any) => ({
-      start: { id: r.start?.id },
-      end: { id: r.end?.id },
-      type: r.type || 'UNKNOWN',
-    })),
-  }
-}
-
-function countNodesByLabel(nodes: GraphNode[], label: string): number {
-  return nodes.filter(n => n.labels.includes(label)).length
-}
+import {
+  buildGraphLayout,
+  buildNeighborMap,
+  getNodeKind,
+  shapeNetworkPayload,
+} from '@/lib/graph-formatters'
 
 describe('Graph Payload Shaping', () => {
-  const sampleRawData = {
-    center: {
-      id: 'emp-001',
-      labels: ['Employee'],
-      properties: {
-        employee_id: 'EMP0001',
-        name: 'John Doe',
-        title: 'Engineer',
-      },
-    },
-    nodes: [
-      {
-        id: 'emp-001',
+  it('shapes center, nodes and relationships', () => {
+    const result = shapeNetworkPayload({
+      center: { id: '1', labels: ['Employee'], properties: { name: 'A' } },
+      nodes: [{ id: '1', labels: ['Employee'], properties: {} }, { id: '2', labels: ['Skill'], properties: {} }],
+      relationships: [{ start: { id: '1' }, end: { id: '2' }, type: 'HAS_SKILL' }],
+    })
+
+    expect(result.center?.id).toBe('1')
+    expect(result.nodes).toHaveLength(2)
+    expect(result.relationships[0].type).toBe('HAS_SKILL')
+  })
+
+  it('returns empty shape for null', () => {
+    expect(shapeNetworkPayload(null)).toEqual({ center: undefined, nodes: [], relationships: [] })
+  })
+
+  it('builds neighbors and layout metadata', () => {
+    const network = shapeNetworkPayload({
+      center: { id: '1', labels: ['Employee'], properties: { name: 'A' } },
+      nodes: [
+        { id: '1', labels: ['Employee'], properties: { name: 'A' } },
+        { id: '2', labels: ['Employee'], properties: { name: 'B' } },
+        { id: '3', labels: ['Skill'], properties: { name: 'React' } },
+      ],
+      relationships: [
+        { start: { id: '1' }, end: { id: '2' }, type: 'REPORTS_TO' },
+        { start: { id: '1' }, end: { id: '3' }, type: 'HAS_SKILL' },
+      ],
+    })
+
+    const neighbors = buildNeighborMap(network)
+    const layout = buildGraphLayout(network)
+
+    expect(neighbors.get('1')).toEqual(new Set(['2', '3']))
+    expect(layout['1'].isCenter).toBe(true)
+    expect(getNodeKind(network.nodes[2])).toBe('skill')
+  })
+
+  it('normalizes neo4j-like property objects for safe rendering', () => {
+    const network = shapeNetworkPayload({
+      center: {
+        id: '1',
         labels: ['Employee'],
-        properties: { employee_id: 'EMP0001', name: 'John Doe' },
+        properties: {
+          hired_date: {
+            year: { low: 2024, high: 0 },
+            month: { low: 2, high: 0 },
+            day: { low: 7, high: 0 },
+          },
+          score: { low: 9, high: 0 },
+        },
       },
-      {
-        id: 'emp-002',
-        labels: ['Employee'],
-        properties: { employee_id: 'EMP0002', name: 'Jane Smith' },
-      },
-      {
-        id: 'skill-001',
-        labels: ['Skill'],
-        properties: { name: 'Python' },
-      },
-    ],
-    relationships: [
-      { start: { id: 'emp-001' }, end: { id: 'emp-002' }, type: 'REPORTS_TO' },
-      { start: { id: 'emp-001' }, end: { id: 'skill-001' }, type: 'HAS_SKILL' },
-    ],
-  }
-
-  it('should shape raw graph data correctly', () => {
-    const result = shapeNetworkPayload(sampleRawData)
-
-    expect(result.center).toBeDefined()
-    expect(result.center?.id).toBe('emp-001')
-    expect(result.nodes).toHaveLength(3)
-    expect(result.relationships).toHaveLength(2)
-  })
-
-  it('should handle missing data gracefully', () => {
-    const result = shapeNetworkPayload(null)
-
-    expect(result.center).toBeUndefined()
-    expect(result.nodes).toHaveLength(0)
-    expect(result.relationships).toHaveLength(0)
-  })
-
-  it('should count nodes by label correctly', () => {
-    const shaped = shapeNetworkPayload(sampleRawData)
-    const employeeCount = countNodesByLabel(shaped.nodes, 'Employee')
-    const skillCount = countNodesByLabel(shaped.nodes, 'Skill')
-
-    expect(employeeCount).toBe(2)
-    expect(skillCount).toBe(1)
-  })
-
-  it('should default to Employee label if missing', () => {
-    const rawDataNoLabels = {
-      center: { id: 'emp-001', properties: {} },
-      nodes: [{ id: 'emp-001', properties: {} }],
+      nodes: [],
       relationships: [],
-    }
+    })
 
-    const result = shapeNetworkPayload(rawDataNoLabels)
-    expect(result.nodes[0].labels).toEqual(['Employee'])
+    expect(network.center?.properties.hired_date).toBe('2024-02-07')
+    expect(network.center?.properties.score).toBe(9)
   })
 
-  it('should preserve relationship types', () => {
-    const shaped = shapeNetworkPayload(sampleRawData)
+  it('deduplicates nodes and relationships while preserving the center node', () => {
+    const network = shapeNetworkPayload({
+      center: { id: 'dept-1', labels: ['Department'], properties: { name: 'Engineering' } },
+      nodes: [
+        { id: 'dept-1', labels: ['Department'], properties: { name: 'Engineering' } },
+        { id: 'emp-1', labels: ['Employee'], properties: { name: 'Alex' } },
+        { id: 'emp-1', labels: ['Employee'], properties: { name: 'Alex' } },
+      ],
+      relationships: [
+        { start: { id: 'emp-1' }, end: { id: 'dept-1' }, type: 'BELONGS_TO_DEPARTMENT' },
+        { start: { id: 'emp-1' }, end: { id: 'dept-1' }, type: 'BELONGS_TO_DEPARTMENT' },
+      ],
+    })
 
-    expect(shaped.relationships[0].type).toBe('REPORTS_TO')
-    expect(shaped.relationships[1].type).toBe('HAS_SKILL')
+    expect(network.nodes).toHaveLength(2)
+    expect(network.relationships).toHaveLength(1)
+    expect(getNodeKind(network.nodes[0])).toBe('department')
   })
 })

@@ -1,21 +1,33 @@
-import { Inter } from 'next/font/google'
+import { Inter, Manrope } from 'next/font/google'
 import './globals.css'
+import type { ReactNode } from 'react'
+import { AuthSessionProvider } from '@/components/auth/session-provider'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-body',
+})
+
+const manrope = Manrope({
+  subsets: ['latin'],
+  variable: '--font-display',
+})
 
 export const metadata = {
-  title: 'OpenTalent - Internal Talent Graph',
+  title: 'OpenTalent AirNav - Internal Talent Graph',
   description: 'Internal talent graph platform for workforce intelligence',
 }
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: ReactNode
 }) {
   return (
     <html lang="en">
-      <body className={inter.className}>{children}</body>
+      <body className={`${inter.variable} ${manrope.variable}`}>
+        <AuthSessionProvider>{children}</AuthSessionProvider>
+      </body>
     </html>
   )
 }

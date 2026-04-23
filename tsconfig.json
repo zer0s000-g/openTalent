@@ -17,7 +17,7 @@
       "esnext"
     ],
     "allowJs": true,
-    "incremental": true,
+    "incremental": false,
     "plugins": [
       {
         "name": "next"
@@ -34,7 +34,9 @@
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "scripts/**/*.ts"
+    ".next-dev/types/**/*.ts",
+    "scripts/**/*.ts",
+    ".next-build/types/**/*.ts"
   ],
   "exclude": [
     "node_modules"

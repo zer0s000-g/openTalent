@@ -1,68 +1,98 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useMemo, useState } from 'react'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { AppLayout } from '@/components/layout/app-layout'
 import { Card } from '@/components/shared/card'
 import { LoadingSpinner } from '@/components/shared/loading-spinner'
 import { EmptyState } from '@/components/shared/empty-state'
 import { Badge } from '@/components/shared/badge'
+import {
+  DataFreshnessBanner,
+  type DataFreshnessSummary,
+} from '@/components/shared/data-freshness-banner'
 
-interface Skill {
+interface SkillListItem {
   name: string
-  category?: string
   employeeCount: number
-  employees?: Array<{
-    employee_id: string
-    name: string
-    title: string
-    department: string
-  }>
 }
 
-export default function SkillsPage() {
-  const [skills, setSkills] = useState<Skill[]>([])
+interface SkillEmployee {
+  employee_id: string
+  name: string
+  title: string
+  department: string
+  lastImportedAt?: string
+  lastImportSource?: string
+}
+
+async function queryGraphQL(query: string, variables?: Record<string, unknown>) {
+  const response = await fetch('/api/graphql', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query, variables }),
+  })
+
+  const payload = await response.json()
+  if (payload.errors) {
+    throw new Error(payload.errors[0]?.message || 'GraphQL request failed')
+  }
+
+  return payload.data
+}
+
+function SkillsPageContent() {
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const [skills, setSkills] = useState<SkillListItem[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [freshnessSummary, setFreshnessSummary] = useState<DataFreshnessSummary | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedSkill, setSelectedSkill] = useState<string | null>(null)
-  const [skillEmployees, setSkillEmployees] = useState<Array<{
-    employee_id: string
-    name: string
-    title: string
-    department: string
-  }>>([])
+  const [skillEmployeesByName, setSkillEmployeesByName] = useState<Record<string, SkillEmployee[]>>({})
+  const [skillEmployeesLoadingName, setSkillEmployeesLoadingName] = useState<string | null>(null)
+  const [skillEmployeesError, setSkillEmployeesError] = useState<string | null>(null)
 
-  // Fetch all skills with counts
   useEffect(() => {
     async function fetchSkills() {
       try {
-        const response = await fetch('/api/graphql', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            query: `
-              query GetSkills {
-                skills {
-                  name
-                  employees {
-                    employee_id
-                  }
-                }
+        const [skillsData, freshnessData] = await Promise.all([
+          queryGraphQL(`
+            query GetSkills {
+              skills {
+                name
+                employeeCount
               }
-            `,
-          }),
-        })
-        const { data, errors } = await response.json()
-        if (errors) throw new Error(errors[0].message)
+            }
+          `),
+          queryGraphQL(`
+            query GetDataFreshnessSummary {
+              getDataFreshnessSummary {
+                employeeCount
+                employeesWithImportMetadata
+                totalImportBatches
+                latestBatchId
+                latestImportSource
+                latestImportedAt
+                latestWarningCount
+                latestRowsToCreate
+                latestRowsToUpdate
+              }
+            }
+          `),
+        ])
 
-        const skillsWithCounts = (data.skills || []).map((s: any) => ({
-          name: s.name,
-          employeeCount: s.employees?.length || 0,
-        }))
+        const skillList = (skillsData.skills || [])
+          .filter((skill: { name?: string }) => Boolean(skill.name))
+          .map((skill: { name: string; employeeCount: number }) => ({
+            name: skill.name,
+            employeeCount: Number(skill.employeeCount || 0),
+          }))
+          .sort((left: SkillListItem, right: SkillListItem) => right.employeeCount - left.employeeCount)
 
-        // Sort by employee count descending
-        skillsWithCounts.sort((a: Skill, b: Skill) => b.employeeCount - a.employeeCount)
-        setSkills(skillsWithCounts)
+        setSkills(skillList)
+        setFreshnessSummary(freshnessData.getDataFreshnessSummary || null)
       } catch (err) {
         setError(err instanceof Error ? err.message : 'Failed to load skills')
       } finally {
@@ -70,147 +100,214 @@ export default function SkillsPage() {
       }
     }
 
-    fetchSkills()
+    void fetchSkills()
   }, [])
 
-  // Fetch employees for a skill
-  const fetchSkillEmployees = async (skillName: string) => {
+  async function fetchSkillEmployees(skillName: string) {
+    setSkillEmployeesLoadingName(skillName)
+    setSkillEmployeesError(null)
+
     try {
-      const response = await fetch('/api/graphql', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          query: `
-            query GetEmployeesBySkill($skillName: String!) {
-              getEmployeesBySkill(skillName: $skillName, limit: 50) {
-                employee_id
-                name
-                title
-                department
-              }
+      const data = await queryGraphQL(
+        `
+          query GetEmployeesBySkill($skillName: String!) {
+            getEmployeesBySkill(skillName: $skillName) {
+              employee_id
+              name
+              title
+              department
+              lastImportedAt
+              lastImportSource
             }
-          `,
-          variables: { skillName },
-        }),
-      })
-      const { data } = await response.json()
-      setSkillEmployees(data.getEmployeesBySkill || [])
+          }
+        `,
+        { skillName },
+      )
+
+      setSkillEmployeesByName((current) => ({
+        ...current,
+        [skillName]: data.getEmployeesBySkill || [],
+      }))
     } catch (err) {
-      console.error('Failed to fetch skill employees:', err)
+      setSkillEmployeesError(err instanceof Error ? err.message : 'Failed to load employees for this skill')
+    } finally {
+      setSkillEmployeesLoadingName((current) => (current === skillName ? null : current))
     }
   }
 
-  const handleSkillClick = (skillName: string) => {
-    setSelectedSkill(skillName === selectedSkill ? null : skillName)
-    if (skillName !== selectedSkill) {
-      fetchSkillEmployees(skillName)
+  function handleSkillClick(skillName: string) {
+    if (selectedSkill === skillName) {
+      setSelectedSkill(null)
+      setSkillEmployeesError(null)
+      return
+    }
+
+    setSelectedSkill(skillName)
+    setSkillEmployeesError(null)
+
+    if (!skillEmployeesByName[skillName]) {
+      void fetchSkillEmployees(skillName)
     }
   }
 
-  const filteredSkills = skills.filter((skill) =>
-    skill.name.toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredSkills = useMemo(
+    () => skills.filter((skill) => skill.name.toLowerCase().includes(searchQuery.toLowerCase())),
+    [searchQuery, skills],
   )
+
+  const selectedSkillSummary = selectedSkill
+    ? skills.find((skill) => skill.name === selectedSkill) || null
+    : null
+  const selectedSkillEmployees = selectedSkill ? skillEmployeesByName[selectedSkill] || [] : []
+  const isSelectedSkillLoading = Boolean(
+    selectedSkill &&
+    skillEmployeesLoadingName === selectedSkill &&
+    !skillEmployeesByName[selectedSkill],
+  )
+
+  useEffect(() => {
+    if (!skills.length) return
+
+    const requestedSkill = searchParams.get('skill')
+    if (!requestedSkill || selectedSkill === requestedSkill) return
+
+    setSelectedSkill(requestedSkill)
+    setSkillEmployeesError(null)
+
+    if (!skillEmployeesByName[requestedSkill]) {
+      void fetchSkillEmployees(requestedSkill)
+    }
+  }, [searchParams, selectedSkill, skillEmployeesByName, skills])
 
   if (loading) {
     return (
-      <AppLayout>
-        <div className="flex h-64 items-center justify-center">
-          <LoadingSpinner size="lg" />
-        </div>
-      </AppLayout>
+      <div className="flex h-64 items-center justify-center">
+        <LoadingSpinner size="lg" />
+      </div>
     )
   }
 
   if (error) {
     return (
-      <AppLayout>
-        <EmptyState
-          title="Error loading skills"
-          description={error}
-        />
-      </AppLayout>
+      <EmptyState
+        title="Error loading skills"
+        description={error}
+      />
     )
   }
 
   return (
-    <AppLayout>
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-gray-900">Skills Directory</h1>
-        <p className="mt-1 text-sm text-gray-500">
-          Browse and explore skills across the organization
-        </p>
-      </div>
+    <div className="space-y-6 px-6">
+        <section className="lg:max-w-[22rem]">
+          <h2 className="font-display text-3xl font-semibold text-ink-900">Skills Directory</h2>
+          <p className="mt-2 text-base leading-7 text-ink-500">
+            Browse and explore skills across the organization.
+          </p>
+        </section>
 
-      <div className="flex gap-6">
-        {/* Left - Skills List */}
-        <div className="w-80 flex-shrink-0">
-          <Card title="Search Skills">
-            <input
-              type="text"
-              placeholder="Search skills..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-            />
-          </Card>
+        <DataFreshnessBanner summary={freshnessSummary} contextLabel="Skill coverage" />
 
-          <Card className="mt-4" title={`All Skills (${skills.length})`}>
-            <div className="max-h-[600px] overflow-y-auto space-y-1">
-              {filteredSkills.map((skill) => (
-                <button
-                  key={skill.name}
-                  onClick={() => handleSkillClick(skill.name)}
-                  className={`w-full flex items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors ${
-                    selectedSkill === skill.name
-                      ? 'bg-primary-50 text-primary-700'
-                      : 'hover:bg-gray-50'
-                  }`}
-                >
-                  <span className="truncate">{skill.name}</span>
-                  <Badge color="blue">{skill.employeeCount}</Badge>
-                </button>
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        {/* Right - Skill Details */}
-        <div className="flex-1">
-          {selectedSkill ? (
-            <Card>
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium">{selectedSkill}</h3>
-                <Badge color="blue">{skillEmployees.length} employees</Badge>
-              </div>
-              {skillEmployees.length > 0 ? (
-                <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
-                  {skillEmployees.map((emp) => (
-                    <div
-                      key={emp.employee_id}
-                      onClick={() => (window.location.href = `/employee/${emp.employee_id}`)}
-                      className="cursor-pointer rounded-lg border border-gray-200 p-4 hover:bg-gray-50 transition-colors"
-                    >
-                      <p className="font-medium text-gray-900 truncate">{emp.name}</p>
-                      <p className="text-sm text-gray-500 truncate">{emp.title}</p>
-                      <p className="text-xs text-gray-400 mt-1">{emp.department}</p>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <EmptyState
-                  title="No employees found"
-                  description="No employees are listed with this skill yet."
-                />
-              )}
+        <div className="grid gap-6 lg:grid-cols-[340px_minmax(0,1fr)]">
+          <div className="space-y-4">
+            <Card title="Search Skills">
+              <input
+                type="text"
+                placeholder="Search skills..."
+                value={searchQuery}
+                onChange={(event) => setSearchQuery(event.target.value)}
+                className="w-full rounded-md border border-gray-300 px-3 py-2 text-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+              />
             </Card>
-          ) : (
-            <EmptyState
-              title="Select a skill"
-              description="Click on a skill from the list to see which employees have it."
-            />
-          )}
+
+            <Card title={`All Skills (${skills.length})`}>
+              <div className="max-h-[600px] space-y-1 overflow-y-auto">
+                {filteredSkills.map((skill) => (
+                  <button
+                    key={skill.name}
+                    type="button"
+                    onClick={() => handleSkillClick(skill.name)}
+                    className={`flex w-full items-center justify-between rounded-md px-3 py-2 text-left text-sm transition-colors ${
+                      selectedSkill === skill.name
+                        ? 'bg-primary-50 text-primary-700'
+                        : 'hover:bg-gray-50'
+                    }`}
+                  >
+                    <span className="truncate">{skill.name}</span>
+                    <Badge color="blue">{skill.employeeCount}</Badge>
+                  </button>
+                ))}
+              </div>
+            </Card>
+          </div>
+
+          <div>
+            {selectedSkill ? (
+              <Card>
+                <div className="mb-4 flex items-center justify-between">
+                  <h3 className="text-lg font-medium">{selectedSkill}</h3>
+                  <Badge color="blue">{selectedSkillSummary?.employeeCount || selectedSkillEmployees.length} employees</Badge>
+                </div>
+
+                {isSelectedSkillLoading ? (
+                  <div className="flex min-h-[16rem] items-center justify-center">
+                    <LoadingSpinner size="lg" />
+                  </div>
+                ) : skillEmployeesError ? (
+                  <EmptyState
+                    title="Unable to load employees"
+                    description={skillEmployeesError}
+                  />
+                ) : selectedSkillEmployees.length > 0 ? (
+                  <div className="grid gap-3 md:grid-cols-2 lg:grid-cols-3">
+                    {selectedSkillEmployees.map((employee) => (
+                      <button
+                        key={employee.employee_id}
+                        type="button"
+                        onClick={() => router.push(`/employee/${employee.employee_id}`)}
+                        className="rounded-lg border border-gray-200 p-4 text-left transition-colors hover:bg-gray-50"
+                      >
+                        <p className="truncate font-medium text-gray-900">{employee.name}</p>
+                        <p className="truncate text-sm text-gray-500">{employee.title}</p>
+                        <p className="mt-1 text-xs text-gray-400">{employee.department}</p>
+                        <p className="mt-2 text-[11px] text-gray-400">
+                          {employee.lastImportedAt
+                            ? `Imported ${new Date(employee.lastImportedAt).toLocaleDateString()}`
+                            : employee.lastImportSource || 'Import metadata unavailable'}
+                        </p>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <EmptyState
+                    title="No employees found"
+                    description="No employees are listed with this skill yet."
+                  />
+                )}
+              </Card>
+            ) : (
+              <EmptyState
+                title="Select a skill"
+                description="Click on a skill from the list to see which employees have it."
+              />
+            )}
+          </div>
         </div>
       </div>
+  )
+}
+
+export default function SkillsPage() {
+  return (
+    <AppLayout>
+      <Suspense
+        fallback={
+          <div className="flex h-64 items-center justify-center">
+            <LoadingSpinner size="lg" />
+          </div>
+        }
+      >
+        <SkillsPageContent />
+      </Suspense>
     </AppLayout>
   )
 }

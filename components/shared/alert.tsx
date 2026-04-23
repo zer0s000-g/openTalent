@@ -5,17 +5,17 @@ interface AlertProps {
 }
 
 const alertStyles = {
-  info: 'bg-primary-50 text-primary-800 border-primary-200',
-  success: 'bg-green-50 text-green-800 border-green-200',
-  warning: 'bg-yellow-50 text-yellow-800 border-yellow-200',
-  error: 'bg-red-50 text-red-800 border-red-200',
+  info: 'border-primary-200 bg-primary-50/90 text-primary-900',
+  success: 'border-emerald-200 bg-emerald-50/90 text-emerald-800',
+  warning: 'border-amber-200 bg-amber-50/90 text-amber-800',
+  error: 'border-rose-200 bg-rose-50/90 text-rose-800',
 }
 
 export function Alert({ type, title, description }: AlertProps) {
   return (
-    <div className={`rounded-lg border p-4 ${alertStyles[type]}`}>
-      <h4 className="font-medium">{title}</h4>
-      {description && <p className="mt-1 text-sm opacity-90">{description}</p>}
+    <div className={`rounded-2xl border p-4 shadow-sm ${alertStyles[type]}`}>
+      <h4 className="font-semibold">{title}</h4>
+      {description && <p className="mt-1.5 text-sm opacity-90">{description}</p>}
     </div>
   )
 }

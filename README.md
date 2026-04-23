@@ -1,6 +1,6 @@
 # OpenTalent - Internal Talent Graph Platform
 
-A V1 internal talent graph platform for workforce intelligence and exploration.
+A V1 internal talent graph platform for workforce intelligence and exploration inside AirNav Indonesia.
 
 ## Quick Start
 
@@ -17,7 +17,7 @@ docker-compose up -d
 
 Wait ~30 seconds for Neo4j to start. Verify at http://localhost:7474
 - Username: `neo4j`
-- Password: `opentalent123`
+- Password: `opentalent-local-dev` for the provided local Docker setup
 
 ### 2. Install Dependencies
 
@@ -28,10 +28,10 @@ npm install
 ### 3. Configure Environment
 
 ```bash
-cp .env.local.example .env.local
+cp .env.example .env.local
 ```
 
-The default values work with the Docker Compose setup.
+The default values work for local development only. `NEO4J_PASSWORD` must match your Neo4j instance, and production/internal environments should use an internal secret manager or deployment-specific configuration.
 
 ### 4. Seed Sample Data
 
@@ -39,7 +39,7 @@ The default values work with the Docker Compose setup.
 npm run seed
 ```
 
-This creates 120 sample employees with skills, certifications, education, and manager relationships.
+This creates 500 sample employees with Indonesian-style names, major-city distribution, skills, certifications, education, and manager relationships.
 
 ### 5. Start Development Server
 
@@ -48,6 +48,41 @@ npm run dev
 ```
 
 Open http://localhost:3000
+
+By default the app runs in `development-bypass` auth mode locally so the internal route protections do not block development. Internal deployments should switch to `AUTH_MODE=proxy-header` and have the VPN / reverse proxy / SSO layer inject the configured identity headers.
+
+
+## Environment Variables
+
+Create `.env.local` from `.env.example` and set:
+
+- `NEO4J_URI` - Bolt connection string (default `bolt://localhost:7687`)
+- `NEO4J_USERNAME` - Neo4j username
+- `NEO4J_PASSWORD` - Neo4j password
+- `NEO4J_DATABASE` - database name (`neo4j` by default)
+- `AUTH_MODE` - `development-bypass` for local development or `proxy-header` for internal deployment
+- `AUTH_PROXY_EMAIL_HEADER` - request header carrying the authenticated user email
+- `AUTH_PROXY_NAME_HEADER` - request header carrying the authenticated user display name
+- `AUTH_PROXY_ROLE_HEADER` - request header carrying the authenticated user role (`viewer`, `manager`, or `admin`)
+- `AUTH_DEV_USER_EMAIL`, `AUTH_DEV_USER_NAME`, `AUTH_DEV_USER_ROLE` - local bypass identity used only in development mode
+- `LLM_BASE_URL`, `LLM_API_KEY`, `LLM_MODEL` - optional OpenAI-compatible provider settings
+- `OPENROUTER_API_KEY` - optional alternate provider setting
+
+## Internal Access Model
+
+OpenTalent is designed as a VPN-restricted internal application. Route protection is enforced in middleware:
+
+- `viewer` access is required for the application shell and read APIs
+- `admin` access is required for `/admin/import` and `/api/import`
+- `/api/health` remains available for internal service checks
+
+For internal deployment with reverse proxy or SSO integration, switch to `AUTH_MODE=proxy-header` and inject these headers:
+
+- `x-opentalent-user-email`
+- `x-opentalent-user-name`
+- `x-opentalent-user-role`
+
+You can rename those headers through the matching `AUTH_PROXY_*` environment variables.
 
 ## Available Scripts
 
@@ -69,14 +104,18 @@ Open http://localhost:3000
 - **Skills** (`/skills`) - Browse skills and find employees
 - **Admin Import** (`/admin/import`) - Upload CSV files
 
+## Health Check
+
+- `GET /api/health` - internal service status for the app, Neo4j connectivity, auth mode, and assistant provider configuration
+
 ## Sample Credentials
 
-After seeding, use these employee IDs to explore:
+After seeding, use these employee IDs to explore the sample organization:
 
-- `EMP0001` - Susan Chen, VP Engineering (executive, no manager)
-- `EMP0011` - Sarah Johnson, VP Product
-- `EMP0002` - Michael Rodriguez, Engineering Manager
-- `EMP0003` - Jennifer Park, Staff Engineer
+- `EMP0001` - Chief Executive Officer root node
+- `EMP0002` - first executive direct report
+- `EMP0010` - early leadership record for org exploration
+- `EMP0250` - midpoint employee record for search and graph checks
 
 ## CSV Import Format
 
